@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club C. | Menu</title>
+    <link rel="stylesheet" href="Menu.css">
+</head>
+
+<body>
+
+    <!-- NAV BAR -->
+    <nav class="navBar">
+        <h1 class="Logo">Club C.</h1>
+    </nav>
+
+    <!-- HERO -->
+    <section class="menu-hero">
+        <h2 class="fade-in">Our Menu</h2>
+        <p class="fade-in">
+            Crafted with care, brewed with passion.
+        </p>
+    </section>
+
+    <!-- COFFEE SECTION -->
+    <section class="menu-section">
+        <h3 class="section-title fade-in">Coffee</h3>
+
+        <div class="menu-grid">
+
+            <div class="menu-card fade-in">
+                <div class="card-inner">
+                    <img src="Resources/process-preparing-espresso-professional-coffee-machine-closeup.jpg">
+                    <h4>Spanish Latte</h4>
+                    <p>Smooth espresso with creamy sweetness.</p>
+                    <span>₱150</span>
+                </div>
+            </div>
+
+            <div class="menu-card fade-in">
+                <div class="card-inner">
+                    <img src="Resources/process-preparing-espresso-professional-coffee-machine-closeup.jpg">
+                    <h4>Caramel Macchiato</h4>
+                    <p>Bold espresso with caramel drizzle.</p>
+                    <span>₱160</span>
+                </div>
+            </div>
+
+            <div class="menu-card fade-in">
+                <div class="card-inner">
+                    <img src="Resources/process-preparing-espresso-professional-coffee-machine-closeup.jpg">
+                    <h4>Vanilla Latte</h4>
+                    <p>Classic latte infused with vanilla.</p>
+                    <span>₱155</span>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- DIVIDER -->
+    <div class="divider"></div>
+
+    <!-- SNACKS SECTION -->
+    <section class="menu-section">
+        <h3 class="section-title fade-in">Snacks</h3>
+
+        <div class="menu-grid">
+
+            <div class="menu-card fade-in">
+                <div class="card-inner">
+                    <img src="Resources/delicious-cookies-with-glass-milk.jpg">
+                    <h4>Chocolate Chip Cookie</h4>
+                    <p>Freshly baked, crispy on the edges.</p>
+                    <span>₱90</span>
+                </div>
+            </div>
+
+            <div class="menu-card fade-in">
+                <div class="card-inner">
+                    <img src="Resources/delicious-cookies-with-glass-milk.jpg">
+                    <h4>Butter Croissant</h4>
+                    <p>Flaky, buttery, and warm.</p>
+                    <span>₱120</span>
+                </div>
+            </div>
+
+            <div class="menu-card fade-in">
+                <div class="card-inner">
+                    <img src="Resources/delicious-cookies-with-glass-milk.jpg">
+                    <h4>Chocolate Brownie</h4>
+                    <p>Rich, fudgy, and indulgent.</p>
+                    <span>₱110</span>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        © 2026 Club C. All rights reserved.
+    </footer>
+
+    <!-- FADE IN SCRIPT -->
+    <script>
+        const faders = document.querySelectorAll('.fade-in');
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show');
+                }
+            });
+        }, { threshold: 0.2 });
+
+        faders.forEach(el => observer.observe(el));
+    </script>
+
+</body>
+</html>
