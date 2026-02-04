@@ -109,18 +109,18 @@
         max-width: 420px;
     }
 
-/* DIVIDER */
-.divider {
-    width: 70%;
-    height: 1px;
-    background: linear-gradient(
-        to right,
-        transparent,
-        rgba(255,255,255,0.4),
-        transparent
-    );
-    margin: 60px auto;
-}
+    /* DIVIDER */
+    .divider {
+        width: 70%;
+        height: 1px;
+        background: linear-gradient(
+            to right,
+            transparent,
+            rgba(255,255,255,0.4),
+            transparent
+        );
+        margin: 60px auto;
+    }
 
     /* CONTACTS */
     .ContactsPage {
