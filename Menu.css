@@ -40,7 +40,6 @@ body {
     transition: color 0.3s ease;
 }
 
-/* underline hover */
 .nav-links a::after {
     content: "";
     position: absolute;
@@ -83,10 +82,10 @@ body {
     padding: 70px 80px;
 }
 
-/* GRID — FIXED */
+/* GRID */
 .menu-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* FORCE 3 PER ROW */
+    grid-template-columns: repeat(3, 1fr);
     gap: 30px;
     margin-top: 25px;
 }
@@ -104,7 +103,7 @@ body {
     }
 }
 
-/* COLLAPSE LOGIC */
+/* COLLAPSE */
 .menu-grid.collapsed .menu-card:nth-child(n+4) {
     display: none;
 }
@@ -143,7 +142,7 @@ body {
     color: #C8A27C;
 }
 
-/* SHOW MORE / SHOW LESS */
+/* SHOW MORE */
 .toggle-btn {
     display: block;
     margin: 35px auto 0;

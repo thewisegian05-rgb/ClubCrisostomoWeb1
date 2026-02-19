@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Club C. | Cart</title>
+    <link rel="stylesheet" href="cart.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navBar">
+    <h1 class="logo">Club C.</h1>
+    <div class="nav-right">
+        <button class="menu-btn" onclick="window.location.href='Menu.html'">Menu</button>
+        <div class="total-amount" id="totalAmount">₱0</div>
+        <a href="Payment.html" class="checkout-btn">Check Out</a>
+    </div>
+</nav>
+
+<section class="cart-page">
+    <div class="cart-content">
+        <div class="cart-items" id="cartItems">
+            <!-- Items will be injected dynamically -->
+        </div>
+    </div>
+</section>
+
+<script src="cart.js"></script>
+</body>
+</html>

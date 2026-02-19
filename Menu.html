@@ -16,7 +16,9 @@
         <li><a href="#refreshers">Refreshers</a></li>
         <li><a href="#snacks">Snacks</a></li>
     </ul>
-    <button class="cart-btn">Cart <span id="cartCount">0</span></button>
+    <button class="cart-btn" onclick="window.location.href='Cart.html'">
+        Cart <span id="cartCount">0</span>
+    </button>
 </nav>
 
 <!-- HERO -->
@@ -24,203 +26,56 @@
     <h2>Crafted with care, brewed with passion.</h2>
 </header>
 
-<!-- COFFEE -->
+<!-- MENU SECTIONS -->
 <section id="coffee" class="menu-section">
     <h3>Coffee</h3>
     <div class="menu-grid">
-        <div class="menu-card" data-name="Spanish Latte" data-desc="Smooth espresso with creamy sweetness." data-price="150" data-img="Resources/coffee1.jpg">
-            <img src="Resources/coffee1.jpg">
-            <h4>Spanish Latte</h4>
-            <p>Smooth espresso with creamy sweetness.</p>
-            <span>₱150</span>
-        </div>
-
-        <div class="menu-card" data-name="Americano" data-desc="Bold and classic espresso." data-price="120" data-img="Resources/coffee2.jpg">
-            <img src="Resources/coffee2.jpg">
-            <h4>Americano</h4>
-            <p>Bold and classic espresso.</p>
-            <span>₱120</span>
-        </div>
-
-        <div class="menu-card" data-name="Caramel Latte" data-desc="Sweet caramel and milk." data-price="160" data-img="Resources/coffee3.jpg">
-            <img src="Resources/coffee3.jpg">
-            <h4>Caramel Latte</h4>
-            <p>Sweet caramel and milk.</p>
-            <span>₱160</span>
-        </div>
-
-        <div class="menu-card" data-name="Mocha" data-desc="Chocolate-infused espresso." data-price="170" data-img="Resources/coffee4.jpg">
-            <img src="Resources/coffee4.jpg">
-            <h4>Mocha</h4>
-            <p>Chocolate-infused espresso.</p>
-            <span>₱170</span>
-        </div>
-
-        <div class="menu-card" data-name="Vanilla Latte" data-desc="Creamy vanilla espresso." data-price="155" data-img="Resources/coffee5.jpg">
-            <img src="Resources/coffee5.jpg">
-            <h4>Vanilla Latte</h4>
-            <p>Creamy vanilla espresso.</p>
-            <span>₱155</span>
-        </div>
-
-        <div class="menu-card" data-name="Cappuccino" data-desc="Foamy espresso delight." data-price="145" data-img="Resources/coffee6.jpg">
-            <img src="Resources/coffee6.jpg">
-            <h4>Cappuccino</h4>
-            <p>Foamy espresso delight.</p>
-            <span>₱145</span>
-        </div>
+        <div class="menu-card" data-name="Spanish Latte" data-desc="Smooth espresso with creamy sweetness." data-price="150" data-img="Resources/coffee1.jpg"><img src="Resources/coffee1.jpg"><h4>Spanish Latte</h4><p>Smooth espresso with creamy sweetness.</p><span>₱150</span></div>
+        <div class="menu-card" data-name="Americano" data-desc="Classic black coffee." data-price="120" data-img="Resources/coffee2.jpg"><img src="Resources/coffee2.jpg"><h4>Americano</h4><p>Classic black coffee.</p><span>₱120</span></div>
+        <div class="menu-card" data-name="Mocha" data-desc="Chocolate-infused espresso." data-price="160" data-img="Resources/coffee3.jpg"><img src="Resources/coffee3.jpg"><h4>Mocha</h4><p>Chocolate-infused espresso.</p><span>₱160</span></div>
+        <div class="menu-card" data-name="Cappuccino" data-desc="Frothy espresso with milk." data-price="140" data-img="Resources/coffee4.jpg"><img src="Resources/coffee4.jpg"><h4>Cappuccino</h4><p>Frothy espresso with milk.</p><span>₱140</span></div>
+        <div class="menu-card" data-name="Latte" data-desc="Espresso with steamed milk." data-price="150" data-img="Resources/coffee5.jpg"><img src="Resources/coffee5.jpg"><h4>Latte</h4><p>Espresso with steamed milk.</p><span>₱150</span></div>
+        <div class="menu-card" data-name="Flat White" data-desc="Smooth espresso with microfoam." data-price="155" data-img="Resources/coffee6.jpg"><img src="Resources/coffee6.jpg"><h4>Flat White</h4><p>Smooth espresso with microfoam.</p><span>₱155</span></div>
     </div>
-
     <button class="toggle-btn">Show More</button>
 </section>
 
-<!-- NON COFFEE -->
 <section id="noncoffee" class="menu-section">
     <h3>Non-Coffee</h3>
     <div class="menu-grid">
-        <div class="menu-card" data-name="Chocolate Drink" data-desc="Rich and creamy chocolate." data-price="140" data-img="Resources/noncoffee1.jpg">
-            <img src="Resources/noncoffee1.jpg">
-            <h4>Chocolate Drink</h4>
-            <p>Rich and creamy chocolate.</p>
-            <span>₱140</span>
-        </div>
-
-        <div class="menu-card" data-name="Matcha Latte" data-desc="Earthy matcha goodness." data-price="150" data-img="Resources/noncoffee2.jpg">
-            <img src="Resources/noncoffee2.jpg">
-            <h4>Matcha Latte</h4>
-            <p>Earthy matcha goodness.</p>
-            <span>₱150</span>
-        </div>
-
-        <div class="menu-card" data-name="Strawberry Milk" data-desc="Sweet strawberry milk." data-price="135" data-img="Resources/noncoffee3.jpg">
-            <img src="Resources/noncoffee3.jpg">
-            <h4>Strawberry Milk</h4>
-            <p>Sweet strawberry milk.</p>
-            <span>₱135</span>
-        </div>
-
-        <div class="menu-card" data-name="Hot Milk" data-desc="Warm and comforting." data-price="100" data-img="Resources/noncoffee4.jpg">
-            <img src="Resources/noncoffee4.jpg">
-            <h4>Hot Milk</h4>
-            <p>Warm and comforting.</p>
-            <span>₱100</span>
-        </div>
-
-        <div class="menu-card" data-name="Chai Latte" data-desc="Spiced tea latte." data-price="145" data-img="Resources/noncoffee5.jpg">
-            <img src="Resources/noncoffee5.jpg">
-            <h4>Chai Latte</h4>
-            <p>Spiced tea latte.</p>
-            <span>₱145</span>
-        </div>
-
-        <div class="menu-card" data-name="White Chocolate" data-desc="Sweet white chocolate drink." data-price="150" data-img="Resources/noncoffee6.jpg">
-            <img src="Resources/noncoffee6.jpg">
-            <h4>White Chocolate</h4>
-            <p>Sweet white chocolate drink.</p>
-            <span>₱150</span>
-        </div>
+        <div class="menu-card" data-name="Hot Chocolate" data-desc="Rich and creamy chocolate." data-price="140" data-img="Resources/noncoffee1.jpg"><img src="Resources/noncoffee1.jpg"><h4>Hot Chocolate</h4><p>Rich and creamy chocolate.</p><span>₱140</span></div>
+        <div class="menu-card" data-name="Chai Latte" data-desc="Spiced tea with milk." data-price="130" data-img="Resources/noncoffee2.jpg"><img src="Resources/noncoffee2.jpg"><h4>Chai Latte</h4><p>Spiced tea with milk.</p><span>₱130</span></div>
+        <div class="menu-card" data-name="Matcha Latte" data-desc="Green tea with milk." data-price="150" data-img="Resources/noncoffee3.jpg"><img src="Resources/noncoffee3.jpg"><h4>Matcha Latte</h4><p>Green tea with milk.</p><span>₱150</span></div>
+        <div class="menu-card" data-name="Ovaltine" data-desc="Classic malt drink." data-price="120" data-img="Resources/noncoffee4.jpg"><img src="Resources/noncoffee4.jpg"><h4>Ovaltine</h4><p>Classic malt drink.</p><span>₱120</span></div>
+        <div class="menu-card" data-name="Strawberry Milk" data-desc="Fresh strawberry flavor." data-price="130" data-img="Resources/noncoffee5.jpg"><img src="Resources/noncoffee5.jpg"><h4>Strawberry Milk</h4><p>Fresh strawberry flavor.</p><span>₱130</span></div>
+        <div class="menu-card" data-name="Blueberry Smoothie" data-desc="Refreshing fruit smoothie." data-price="145" data-img="Resources/noncoffee6.jpg"><img src="Resources/noncoffee6.jpg"><h4>Blueberry Smoothie</h4><p>Refreshing fruit smoothie.</p><span>₱145</span></div>
     </div>
-
     <button class="toggle-btn">Show More</button>
 </section>
 
-<!-- REFRESHERS -->
 <section id="refreshers" class="menu-section">
     <h3>Refreshers</h3>
     <div class="menu-grid">
-        <div class="menu-card" data-name="Lemonade" data-desc="Fresh and zesty." data-price="110" data-img="Resources/refresher1.jpg">
-            <img src="Resources/refresher1.jpg">
-            <h4>Lemonade</h4>
-            <p>Fresh and zesty.</p>
-            <span>₱110</span>
-        </div>
-
-        <div class="menu-card" data-name="Iced Tea" data-desc="Cool and refreshing." data-price="105" data-img="Resources/refresher2.jpg">
-            <img src="Resources/refresher2.jpg">
-            <h4>Iced Tea</h4>
-            <p>Cool and refreshing.</p>
-            <span>₱105</span>
-        </div>
-
-        <div class="menu-card" data-name="Peach Soda" data-desc="Sweet peach fizz." data-price="120" data-img="Resources/refresher3.jpg">
-            <img src="Resources/refresher3.jpg">
-            <h4>Peach Soda</h4>
-            <p>Sweet peach fizz.</p>
-            <span>₱120</span>
-        </div>
-
-        <div class="menu-card" data-name="Cucumber Cooler" data-desc="Light and crisp." data-price="115" data-img="Resources/refresher4.jpg">
-            <img src="Resources/refresher4.jpg">
-            <h4>Cucumber Cooler</h4>
-            <p>Light and crisp.</p>
-            <span>₱115</span>
-        </div>
-
-        <div class="menu-card" data-name="Berry Splash" data-desc="Mixed berry refresher." data-price="130" data-img="Resources/refresher5.jpg">
-            <img src="Resources/refresher5.jpg">
-            <h4>Berry Splash</h4>
-            <p>Mixed berry refresher.</p>
-            <span>₱130</span>
-        </div>
-
-        <div class="menu-card" data-name="Mango Fizz" data-desc="Tropical mango soda." data-price="135" data-img="Resources/refresher6.jpg">
-            <img src="Resources/refresher6.jpg">
-            <h4>Mango Fizz</h4>
-            <p>Tropical mango soda.</p>
-            <span>₱135</span>
-        </div>
+        <div class="menu-card" data-name="Lemonade" data-desc="Classic lemonade." data-price="120" data-img="Resources/refresher1.jpg"><img src="Resources/refresher1.jpg"><h4>Lemonade</h4><p>Classic lemonade.</p><span>₱120</span></div>
+        <div class="menu-card" data-name="Iced Tea" data-desc="Cool and refreshing." data-price="110" data-img="Resources/refresher2.jpg"><img src="Resources/refresher2.jpg"><h4>Iced Tea</h4><p>Cool and refreshing.</p><span>₱110</span></div>
+        <div class="menu-card" data-name="Fruit Punch" data-desc="Sweet tropical punch." data-price="130" data-img="Resources/refresher3.jpg"><img src="Resources/refresher3.jpg"><h4>Fruit Punch</h4><p>Sweet tropical punch.</p><span>₱130</span></div>
+        <div class="menu-card" data-name="Mango Cooler" data-desc="Mango with soda." data-price="135" data-img="Resources/refresher4.jpg"><img src="Resources/refresher4.jpg"><h4>Mango Cooler</h4><p>Mango with soda.</p><span>₱135</span></div>
+        <div class="menu-card" data-name="Berry Lemonade" data-desc="Mixed berry lemonade." data-price="140" data-img="Resources/refresher5.jpg"><img src="Resources/refresher5.jpg"><h4>Berry Lemonade</h4><p>Mixed berry lemonade.</p><span>₱140</span></div>
+        <div class="menu-card" data-name="Cucumber Refresher" data-desc="Cucumber & mint." data-price="125" data-img="Resources/refresher6.jpg"><img src="Resources/refresher6.jpg"><h4>Cucumber Refresher</h4><p>Cucumber & mint.</p><span>₱125</span></div>
     </div>
-
     <button class="toggle-btn">Show More</button>
 </section>
 
-<!-- SNACKS -->
 <section id="snacks" class="menu-section">
     <h3>Snacks</h3>
     <div class="menu-grid">
-        <div class="menu-card" data-name="Croissant" data-desc="Buttery and flaky." data-price="90" data-img="Resources/snack1.jpg">
-            <img src="Resources/snack1.jpg">
-            <h4>Croissant</h4>
-            <p>Buttery and flaky.</p>
-            <span>₱90</span>
-        </div>
-
-        <div class="menu-card" data-name="Chocolate Muffin" data-desc="Rich chocolate muffin." data-price="95" data-img="Resources/snack2.jpg">
-            <img src="Resources/snack2.jpg">
-            <h4>Chocolate Muffin</h4>
-            <p>Rich chocolate muffin.</p>
-            <span>₱95</span>
-        </div>
-
-        <div class="menu-card" data-name="Blueberry Muffin" data-desc="Soft blueberry muffin." data-price="95" data-img="Resources/snack3.jpg">
-            <img src="Resources/snack3.jpg">
-            <h4>Blueberry Muffin</h4>
-            <p>Soft blueberry muffin.</p>
-            <span>₱95</span>
-        </div>
-
-        <div class="menu-card" data-name="Cheesecake" data-desc="Creamy cheesecake slice." data-price="120" data-img="Resources/snack4.jpg">
-            <img src="Resources/snack4.jpg">
-            <h4>Cheesecake</h4>
-            <p>Creamy cheesecake slice.</p>
-            <span>₱120</span>
-        </div>
-
-        <div class="menu-card" data-name="Brownie" data-desc="Fudgy chocolate brownie." data-price="100" data-img="Resources/snack5.jpg">
-            <img src="Resources/snack5.jpg">
-            <h4>Brownie</h4>
-            <p>Fudgy chocolate brownie.</p>
-            <span>₱100</span>
-        </div>
-
-        <div class="menu-card" data-name="Banana Bread" data-desc="Moist banana loaf." data-price="105" data-img="Resources/snack6.jpg">
-            <img src="Resources/snack6.jpg">
-            <h4>Banana Bread</h4>
-            <p>Moist banana loaf.</p>
-            <span>₱105</span>
-        </div>
+        <div class="menu-card" data-name="Bibingka" data-desc="Traditional Filipino rice cake." data-price="150" data-img="Resources/snack1.jpg"><img src="Resources/snack1.jpg"><h4>Bibingka</h4><p>Traditional Filipino rice cake.</p><span>₱150</span></div>
+        <div class="menu-card" data-name="Puto Bumbong" data-desc="Purple rice cake." data-price="155" data-img="Resources/snack2.jpg"><img src="Resources/snack2.jpg"><h4>Puto Bumbong</h4><p>Purple rice cake.</p><span>₱155</span></div>
+        <div class="menu-card" data-name="Ensaymada" data-desc="Soft sweet bread." data-price="140" data-img="Resources/snack3.jpg"><img src="Resources/snack3.jpg"><h4>Ensaymada</h4><p>Soft sweet bread.</p><span>₱140</span></div>
+        <div class="menu-card" data-name="Turon" data-desc="Banana spring roll." data-price="130" data-img="Resources/snack4.jpg"><img src="Resources/snack4.jpg"><h4>Turon</h4><p>Banana spring roll.</p><span>₱130</span></div>
+        <div class="menu-card" data-name="Cheese Stick" data-desc="Fried cheese snack." data-price="120" data-img="Resources/snack5.jpg"><img src="Resources/snack5.jpg"><h4>Cheese Stick</h4><p>Fried cheese snack.</p><span>₱120</span></div>
+        <div class="menu-card" data-name="Mochi" data-desc="Chewy rice snack." data-price="145" data-img="Resources/snack6.jpg"><img src="Resources/snack6.jpg"><h4>Mochi</h4><p>Chewy rice snack.</p><span>₱145</span></div>
     </div>
-
     <button class="toggle-btn">Show More</button>
 </section>
 
@@ -233,34 +88,19 @@
         <p id="modalDesc"></p>
 
         <h4>Add-ons</h4>
-
         <div class="addon" data-price="40">
             <span>Espresso Shot</span>
-            <div class="qty">
-                <button>-</button>
-                <span class="count">0</span>
-                <button>+</button>
-            </div>
+            <div class="qty"><button>-</button><span class="count">0</span><button>+</button></div>
             <span>₱40</span>
         </div>
-
         <div class="addon" data-price="30">
             <span>Syrup</span>
-            <div class="qty">
-                <button>-</button>
-                <span class="count">0</span>
-                <button>+</button>
-            </div>
+            <div class="qty"><button>-</button><span class="count">0</span><button>+</button></div>
             <span>₱30</span>
         </div>
-
         <div class="addon" data-price="25">
             <span>Nata Jelly</span>
-            <div class="qty">
-                <button>-</button>
-                <span class="count">0</span>
-                <button>+</button>
-            </div>
+            <div class="qty"><button>-</button><span class="count">0</span><button>+</button></div>
             <span>₱25</span>
         </div>
 
@@ -271,66 +111,6 @@
     </div>
 </div>
 
-<script>
-const modal = document.getElementById("modal");
-const modalImg = document.getElementById("modalImg");
-const modalName = document.getElementById("modalName");
-const modalDesc = document.getElementById("modalDesc");
-const totalPrice = document.getElementById("totalPrice");
-
-let basePrice = 0;
-
-document.querySelectorAll(".menu-card").forEach(card => {
-    card.onclick = () => {
-        basePrice = Number(card.dataset.price);
-        modalImg.src = card.dataset.img;
-        modalName.textContent = card.dataset.name;
-        modalDesc.textContent = card.dataset.desc;
-        document.querySelectorAll(".count").forEach(c => c.textContent = 0);
-        updateTotal();
-        modal.classList.add("show");
-    };
-});
-
-document.querySelectorAll(".addon").forEach(addon => {
-    const btns = addon.querySelectorAll("button");
-    const count = addon.querySelector(".count");
-
-    btns[1].onclick = () => { count.textContent++; updateTotal(); };
-    btns[0].onclick = () => { if (count.textContent > 0) { count.textContent--; updateTotal(); } };
-});
-
-function updateTotal() {
-    let addons = 0;
-    document.querySelectorAll(".addon").forEach(a => {
-        addons += a.dataset.price * a.querySelector(".count").textContent;
-    });
-    totalPrice.textContent = basePrice + addons;
-}
-
-document.querySelector(".close").onclick = () => modal.classList.remove("show");
-modal.onclick = e => { if (e.target === modal) modal.classList.remove("show"); };
-
-/* SHOW MORE / SHOW LESS */
-document.querySelectorAll(".menu-section").forEach(section => {
-    const grid = section.querySelector(".menu-grid");
-    const btn = section.querySelector(".toggle-btn");
-
-    if (grid.children.length <= 3) {
-        btn.style.display = "none";
-        return;
-    }
-
-    grid.classList.add("collapsed");
-
-    btn.onclick = () => {
-        grid.classList.toggle("collapsed");
-        btn.textContent = grid.classList.contains("collapsed")
-            ? "Show More"
-            : "Show Less";
-    };
-});
-</script>
-
+<script src="Menu.js"></script>
 </body>
 </html>
