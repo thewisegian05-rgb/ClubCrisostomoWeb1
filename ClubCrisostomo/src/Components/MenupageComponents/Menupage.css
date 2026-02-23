@@ -1,0 +1,363 @@
+/* --- GLOBAL --- */
+html { scroll-behavior: smooth; }
+.menu-page {
+  background-color: #121212;
+  color: #fff;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+/* --- HERO --- */
+.hero {
+  width: 100%;
+  height: 40vh;
+  background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/hero-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.hero h2 {
+  font-size: 2.5rem;
+  max-width: 600px;
+}
+
+/* --- UPDATED NAVIGATION --- */
+.navBar {
+  position: sticky;
+  top: 0;
+  background: #1a1a1a;
+  padding: 15px 8%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1000;
+  border-bottom: 1px solid #333;
+}
+
+.nav-left, .nav-right {
+  flex: 1;
+}
+
+.nav-right {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nav-buttons-centered {
+  display: flex;
+  justify-content: center;
+  flex: 2;
+}
+
+/* --- LOGO WITH ANIMATION --- */
+.logo-link {
+  text-decoration: none;
+  display: inline-block;
+  position: relative;
+}
+
+.logo {
+  color: #DCD7C9;
+  margin: 0;
+  font-size: 1.8rem;
+  transition: color 0.3s ease;
+}
+
+.logo-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background-color: #C8A27C;
+  transition: width 0.4s ease-out;
+}
+
+.logo-link:hover::after {
+  width: 100%;
+}
+
+.logo-link:hover .logo {
+  color: #fff;
+}
+
+/* --- NAV LINKS --- */
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 30px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 4px 0;
+  display: inline-block;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #C8A27C;
+  transition: width 0.4s ease;
+}
+
+.nav-links a:hover {
+  color: #C8A27C;
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
+
+/* --- CART BUTTON --- */
+.cart-btn {
+  background: #C8A27C;
+  color: #111;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.cart-btn:hover {
+  background: #e2ba92;
+  transform: scale(1.05);
+}
+
+.cart-badge {
+  background: #111;
+  color: #C8A27C;
+  padding: 2px 8px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* --- MENU SECTIONS & CARDS --- */
+.menu-section {
+  padding: 50px 8%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.section-title {
+  color: #C8A27C;
+  font-size: 1.5rem;
+  margin-bottom: 30px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+.menu-card {
+  background: #1e1e1e;
+  border-radius: 15px;
+  overflow: hidden;
+  border: 1px solid #333;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+}
+
+.menu-card:hover {
+  transform: translateY(-12px) scale(1.05);
+  border-color: #C8A27C;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+  z-index: 10;
+}
+
+.menu-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.menu-card:hover img {
+  transform: scale(1.08);
+}
+
+.card-info { padding: 20px; }
+.card-info h4 { margin-bottom: 8px; font-size: 1.2rem; }
+.card-info p { color: #aaa; font-size: 0.9rem; margin-bottom: 15px; }
+.card-price { color: #C8A27C; font-weight: bold; font-size: 1.1rem; }
+
+/* --- TOGGLE BUTTON --- */
+.toggle-btn {
+  display: block;
+  margin: 40px auto 0;
+  background: transparent;
+  color: #C8A27C;
+  border: 1px solid #C8A27C;
+  padding: 10px 30px;
+  border-radius: 25px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+  background: #C8A27C;
+  color: #121212;
+  box-shadow: 0 0 15px rgba(200, 162, 124, 0.4);
+  transform: translateY(-2px);
+}
+
+/* --- MODAL --- */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal.show { opacity: 1; pointer-events: auto; }
+
+.modal-box {
+  background: #1a1a1a;
+  padding: 30px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 450px;
+  border: 1px solid #C8A27C;
+  position: relative;
+}
+
+.close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 2rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: #fff;
+}
+
+.temp-buttons {
+  display: flex;
+  background: #111;
+  padding: 5px;
+  border-radius: 12px;
+  margin-top: 10px;
+}
+
+.temp-buttons button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: #888;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.temp-buttons button.active {
+  background: #C8A27C;
+  color: #111;
+}
+
+.addon-row {
+  display: flex;
+  align-items: center;
+  background: #252525;
+  padding: 10px 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.qty-controls {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  gap: 12px;
+  margin: 0 15px;
+}
+
+.qty-controls button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #111;
+  width: 20px;
+}
+
+.qty-controls .count {
+  color: #111;
+  font-weight: bold;
+  width: 20px;
+  text-align: center;
+}
+
+.modal-footer {
+  margin-top: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.add-cart-btn {
+  background: #C8A27C;
+  color: #111;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.menu-carousel-spacing {
+  margin-bottom: 60px;
+  transform: scale(0.9); 
+}
+
+/* --- ANIMATIONS --- */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: slideUp 0.4s ease forwards;
+}

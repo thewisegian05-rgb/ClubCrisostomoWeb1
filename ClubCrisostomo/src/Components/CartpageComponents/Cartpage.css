@@ -1,0 +1,136 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #111;
+  color: #fff;
+}
+
+/* NAVBAR */
+.navBar {
+  position: sticky;
+  top: 0;
+  background: #2C3639;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 40px;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.total-amount {
+  background: rgba(200, 162, 124, 0.15);
+  border: 1px solid rgba(200, 162, 124, 0.4);
+  color: #C8A27C;
+  padding: 8px 18px;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.menu-btn,
+.checkout-btn {
+  background: linear-gradient(135deg, #C8A27C, #b59063);
+  border: none;
+  padding: 10px 22px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  color: #111;
+  transition: all 0.25s ease;
+}
+
+.menu-btn:hover,
+.checkout-btn:hover {
+  transform: translateY(-3px);
+}
+
+/* CART */
+.cart-page {
+  min-height: 100vh;
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.cart-items {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.cart-card {
+  background: #f5f2e8;
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: #111;
+}
+
+.cart-card img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.item-info {
+  flex: 1;
+}
+
+.item-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 15px;
+}
+
+.qty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+}
+
+.qty button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.remove-btn {
+  background: #e74c3c;
+  border: none;
+  color: #fff;
+  padding: 7px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+}

@@ -1,0 +1,162 @@
+/* --- GLOBAL --- */
+html { scroll-behavior: smooth; }
+body { margin: 0; background-color: #181818; font-family: 'Segoe UI', sans-serif; color: white; overflow-x: hidden; }
+
+/* --- UPDATED NAVIGATION --- */
+.navBar { 
+    background-color: #2C3639; 
+    padding: 0.8rem 10%; 
+    position: sticky; 
+    top: 0; 
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.nav-left, .nav-right {
+    flex: 1; /* Equal weight keeps the middle section centered */
+}
+
+.logo-link {
+    text-decoration: none;
+    display: inline-block;
+}
+
+.Logo { 
+    margin: 0; 
+    font-size: 1.8rem; 
+    color: #DCD7C9; 
+    transition: opacity 0.3s ease;
+}
+
+.logo-link:hover .Logo {
+    opacity: 0.8;
+}
+
+/* CENTERED BUTTONS CONTAINER */
+.nav-buttons-centered {
+    display: flex;
+    gap: 3rem; 
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- LINE ANIMATION (LEFT TO RIGHT) --- */
+.nav-link-animated {
+    color: #DCD7C9;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    position: relative;
+    padding: 5px 0;
+    transition: color 0.3s ease;
+}
+
+.nav-link-animated::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: #C8A27C; 
+    transition: width 0.4s ease-out;
+}
+
+.nav-link-animated:hover {
+    color: #fff;
+}
+
+.nav-link-animated:hover::after {
+    width: 100%;
+}
+
+/* --- HERO SECTION --- */
+.hero { 
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("/top-view-coffee-accessories-with-copy-space.jpg"); 
+    background-size: cover; 
+    background-position: center; 
+    height: 80vh; 
+    display: flex; 
+    align-items: center; 
+    padding: 0 10%; 
+}
+
+.h2 { font-size: clamp(2.5rem, 6vw, 4.5rem); color: #DCD7C9; margin-bottom: 1rem; }
+.hero-p { font-size: 1.2rem; color: #888; letter-spacing: 1px; }
+
+/* --- CAROUSEL STYLING --- */
+.multi-carousel-section { padding: 4rem 0; background: #181818; }
+.favorites-intro { text-align: left; padding: 0 10%; margin-bottom: 4rem; }
+.intro-tagline { color: #888; letter-spacing: 2px; font-size: 0.75rem; font-weight: bold; margin: 0; }
+.intro-title { font-size: 2.2rem; color: #DCD7C9; margin: 0; }
+.category-shelf { margin-bottom: 6rem; }
+.shelf-title { text-align: center; font-size: 1.8rem; color: #C8A27C; margin-bottom: 3rem; letter-spacing: 4px; }
+.slider-wrapper { height: 400px; display: flex; justify-content: center; align-items: center; position: relative; }
+.slider-container { position: relative; width: 100%; max-width: 1000px; height: 100%; }
+
+.slider-card {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 280px;
+    transform: translate(-50%, -50%);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+}
+
+.card-image-box img { width: 100%; height: 300px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+.card-details { margin-top: 15px; text-align: center; transition: 0.5s; opacity: 0; }
+.card-details h3 { font-size: 1.2rem; color: #DCD7C9; }
+.price-tag { color: #C8A27C; font-weight: bold; }
+
+.activeCard { opacity: 1; transform: translate(-50%, -50%) scale(1.1); z-index: 5; }
+.activeCard .card-details { opacity: 1; }
+.prevCard { opacity: 0.3; transform: translate(-150%, -50%) scale(0.8); z-index: 3; filter: blur(2px); }
+.nextCard { opacity: 0.3; transform: translate(50%, -50%) scale(0.8); z-index: 3; filter: blur(2px); }
+
+/* --- PHOTO HOVER --- */
+.ContactsPage { background-color: #181818; padding: 4rem 10%; text-align: center; }
+.GroupPhoto {
+    width: 100%;
+    max-width: 800px;
+    height: 450px;
+    object-fit: cover;
+    border-radius: 25px;
+    display: block;
+    margin: 0 auto;
+    margin-bottom: 25px;
+    filter: brightness(0.8);
+    transition: all 0.5s ease;
+}
+.GroupPhoto:hover {
+    filter: brightness(1);
+    transform: scale(1.02);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+/* --- FOOTER & DIVIDER --- */
+.site-footer { background-color: #000; color: #fff; padding: 80px 8% 30px; }
+.footer-main-content { display: flex; justify-content: space-between; margin-bottom: 60px; }
+.footer-logo { font-size: 2.5rem; color: #DCD7C9; }
+.footer-logo span { color: #C8A27C; }
+.footer-info-grid { display: flex; gap: 60px; }
+.info-col h4 { color: #C8A27C; font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 12px; }
+.footer-link-item { color: #DCD7C9; text-decoration: none; transition: 0.3s; display: block; }
+.footer-link-item:hover { color: #C8A27C; transform: translateX(8px); }
+.footer-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.08); margin-bottom: 25px; }
+.footer-bottom p { color: #222; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; text-align: center; }
+
+/* ANIMATION */
+.fade-in { opacity: 0; transform: translateY(30px); transition: 1s ease-out; }
+.fade-in.show { opacity: 1; transform: translate(0); }
+
+/* MOBILE RESPONSIVE NAV */
+@media (max-width: 768px) {
+    .navBar { padding: 0.8rem 5%; }
+    .nav-buttons-centered { gap: 1.5rem; }
+    .nav-link-animated { font-size: 0.9rem; }
+    .slider-card { width: 220px; }
+}
