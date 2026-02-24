@@ -1,213 +1,251 @@
-/* Reset (safe for component usage) */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-}
-
-/* PAGE WRAPPER (instead of body) */
 .payment-page {
     background: #111;
     color: #fff;
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    padding: 60px 20px;
-}
-
-/* NAVBAR (if you reuse it inside component) */
-.navBar {
-    position: sticky;
-    top: 0;
-    background: #2C3639;
-    display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 15px 40px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+    padding: 20px;
 }
 
-.logo {
-    font-size: 24px;
-    font-weight: bold;
+.payment-container {
+    background: #1a1a1a;
+    width: 100%;
+    max-width: 450px;
+    padding: 30px;
+    border-radius: 24px;
+    border: 1px solid #333;
 }
 
-.nav-right {
+.payment-header {
     display: flex;
-    align-items: center;
-    gap: 20px;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 25px;
 }
 
-.back-btn {
-    background: #C8A27C;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 20px;
+.back-link {
+    color: #C8A27C;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.summary-card {
+    background: rgba(200, 162, 124, 0.1);
+    padding: 20px;
+    border-radius: 16px;
+    text-align: center;
+    border: 1px dashed rgba(200, 162, 124, 0.3);
+    margin-bottom: 30px;
+}
+
+.summary-card span {
+    color: #888;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.total-display {
+    color: #C8A27C;
+    margin: 5px 0 0;
+    font-size: 2.5rem;
+}
+
+.section-label {
+    display: block;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+/* METHOD SELECTION GRID */
+.method-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.method-tile {
+    background: #252525;
+    padding: 15px 5px;
+    border-radius: 12px;
+    text-align: center;
     cursor: pointer;
-    font-weight: bold;
+    border: 1px solid #333;
     transition: 0.3s;
 }
 
-.back-btn:hover {
-    background: #b59063;
+.method-tile input { display: none; }
+
+.method-tile.active {
+    border-color: #C8A27C;
+    background: rgba(200, 162, 124, 0.1);
 }
 
-.total-amount {
-    font-size: 18px;
-    font-weight: bold;
+.method-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #888;
+}
+
+.method-tile.active .method-name {
     color: #C8A27C;
 }
 
-/* PAYMENT CONTAINER */
-.payment-container {
-    background: #f5f2e8;
-    color: #111;
-    width: 100%;
-    max-width: 500px;
-    padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}
-
-.payment-container h2 {
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-/* FORM */
-.form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    margin-bottom: 6px;
-    font-weight: bold;
-    font-size: 14px;
-}
-
-.form-group input {
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-}
-
-.form-row {
-    display: flex;
-    gap: 15px;
-}
-
-/* PAYMENT OPTIONS */
-.payment-options {
+/* FORM FIELDS */
+.card-fields, .qr-section {
     display: flex;
     flex-direction: column;
     gap: 12px;
-}
-
-.radio-option {
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* CARD DETAILS */
-/* ❌ Removed display: none */
-/* React controls visibility */
-.card-details {
-    margin-top: 15px;
-}
-
-/* QR IMAGE */
-.qr-image {
-    display: block;
-    margin: 15px auto 0;
-    max-width: 200px;
-    cursor: pointer;
-}
-
-/* PAY BUTTON */
-.pay-btn {
-    background: #C8A27C;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: bold;
-    width: 100%;
-    font-size: 16px;
-    transition: 0.3s;
     margin-top: 20px;
 }
 
-.pay-btn:hover {
-    background: #b59063;
+.card-fields input {
+    background: #111;
+    border: 1px solid #333;
+    padding: 12px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
 }
 
-/* NOTIFICATIONS */
-#notification-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.qr-section {
+    text-align: center;
+    background: #fff;
+    padding: 20px;
+    border-radius: 16px;
+    color: #111;
+}
+
+.qr-image {
+    width: 180px;
+    margin: 0 auto;
+}
+
+.verify-btn, .pay-btn {
+    background: #C8A27C;
+    color: #111;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+.verify-btn:hover, .pay-btn:hover {
+    background: #e2ba92;
+    transform: translateY(-2px);
+}
+
+.animate-in {
+    animation: fadeIn 0.4s ease forwards;
+}
+.success-container {
+    background: #1a1a1a;
+    width: 100%;
+    max-width: 400px;
+    padding: 40px 30px;
+    border-radius: 24px;
+    text-align: center;
+    border: 1px solid #333;
+}
+
+.success-icon {
+    width: 70px;
+    height: 70px;
+    background: #4CAF50;
+    color: #fff;
+    font-size: 2.5rem;
+    line-height: 70px;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.4);
+}
+
+.success-container h2 {
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.success-container p {
+    color: #888;
+    margin-bottom: 30px;
+}
+
+/* RECEIPT BOX */
+.receipt-box {
+    background: #111;
+    border: 1px solid #222;
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+}
+
+.receipt-box .label {
+    font-size: 0.75rem;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.order-id {
+    color: #C8A27C;
+    font-size: 2rem;
+    margin: 10px 0;
+}
+
+.receipt-details {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #333;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
-.notification {
-    min-width: 260px;
-    padding: 14px 20px;
-    border-radius: 16px;
-    color: #fff;
+.receipt-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    font-weight: 500;
-    font-size: 14px;
-    backdrop-filter: blur(10px);
-    background: rgba(50, 50, 50, 0.85);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-    opacity: 0;
-    transform: translateX(100%);
-    animation: slideIn 0.5s forwards;
+    font-size: 0.9rem;
 }
 
-.notification.success {
-    border-left: 6px solid #4CAF50;
+.status-badge {
+    color: #4CAF50;
+    background: rgba(76, 175, 80, 0.1);
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
 }
 
-.notification.error {
-    border-left: 6px solid #E74C3C;
-}
-
-.notification.info {
-    border-left: 6px solid #3498DB;
-}
-
-.notification .close-btn {
-    margin-left: 16px;
-    cursor: pointer;
+.done-btn {
+    background: transparent;
+    border: 1px solid #C8A27C;
+    color: #C8A27C;
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
     font-weight: bold;
-    color: #fff;
-    opacity: 0.7;
-    transition: opacity 0.2s ease;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
-.notification .close-btn:hover {
-    opacity: 1;
+.done-btn:hover {
+    background: #C8A27C;
+    color: #111;
 }
 
-/* Animations */
-@keyframes slideIn {
-    from { opacity: 0; transform: translateX(100%) scale(0.95); }
-    to { opacity: 1; transform: translateX(0) scale(1); }
-}
-
-@keyframes fadeOut {
-    from { opacity: 1; transform: translateX(0) scale(1); }
-    to { opacity: 0; transform: translateX(100%) scale(0.95); }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

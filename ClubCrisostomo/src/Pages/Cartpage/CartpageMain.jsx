@@ -3,126 +3,123 @@ import { Link } from "react-router-dom";
 import "../../Components/CartpageComponents/Cartpage.css";
 
 const CartpageMain = () => {
-  const [cart, setCart] = useState([]);
-  const [quantities, setQuantities] = useState([]);
-
-  // Load cart from localStorage
-  useEffect(() => {
+  // FIX: Initialize state directly from localStorage
+  const [cart, setCart] = useState(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    setCart(storedCart);
-    setQuantities(storedCart.map(() => 1)); // default qty = 1
-  }, []);
+    // Ensure every item has quantity and unitPrice immediately
+    return storedCart.map(item => ({
+      ...item,
+      quantity: item.quantity || 1,
+      unitPrice: item.total || item.basePrice || 0 
+    }));
+  });
 
-  // Update localStorage whenever cart changes
+  // Save to localStorage whenever 'cart' state changes
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
 
-  const increaseQty = (index) => {
-    const updated = [...quantities];
-    updated[index]++;
-    setQuantities(updated);
-  };
+  // Sync cart across tabs (in case you add items in one tab and cart is open in another)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === "cart") {
+        setCart(JSON.parse(e.newValue) || []);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
-  const decreaseQty = (index) => {
-    const updated = [...quantities];
-    if (updated[index] > 1) updated[index]--;
-    setQuantities(updated);
+  const updateQuantity = (index, delta) => {
+    setCart(prevCart => prevCart.map((item, i) => {
+      if (i === index) {
+        const newQty = Math.max(1, item.quantity + delta);
+        return { ...item, quantity: newQty };
+      }
+      return item;
+    }));
   };
 
   const removeItem = (index) => {
-    const updatedCart = [...cart];
-    const updatedQty = [...quantities];
-    updatedCart.splice(index, 1);
-    updatedQty.splice(index, 1);
-    setCart(updatedCart);
-    setQuantities(updatedQty);
+    setCart(prevCart => prevCart.filter((_, i) => i !== index));
   };
 
-  const calculateItemTotal = (item, index) => {
-    let total = item.basePrice || item.price || 0;
-
-    if (item.addons && item.addons.length > 0) {
-      item.addons.forEach((a) => {
-        total += a.price * a.qty;
-      });
-    }
-
-    return total * quantities[index];
+  const calculateItemTotal = (item) => {
+    return (item.unitPrice || 0) * (item.quantity || 1);
   };
 
-  const calculateTotal = () => {
-    return cart.reduce((sum, item, index) => {
-      return sum + calculateItemTotal(item, index);
-    }, 0);
+  const calculateGrandTotal = () => {
+    return cart.reduce((sum, item) => sum + calculateItemTotal(item), 0);
   };
 
   return (
-    <>
-      {/* NAVBAR */}
+    <div className="cart-wrapper">
       <nav className="navBar">
-        <h1 className="logo">Club C.</h1>
-
-        <div className="nav-right">
-          <Link to="/menu" className="menu-btn">
-            Menu
+        <div className="nav-left">
+          <Link to="/" className="logo-link">
+            <h1 className="logo">Club C.</h1>
           </Link>
-
-          <div className="total-amount">
-            ₱{calculateTotal()}
-          </div>
-
-          <Link to="/payment" className="checkout-btn">
+        </div>
+        <div className="nav-right">
+          <Link to="/menu" className="menu-btn">Menu</Link>
+          <div className="total-amount">₱{calculateGrandTotal()}</div>
+          <Link to="/payment" className={`checkout-btn ${cart.length === 0 ? "disabled" : ""}`}>
             Check Out
           </Link>
         </div>
       </nav>
 
-      {/* CART PAGE */}
+      
+
       <section className="cart-page">
-        <div className="cart-content">
-          <div className="cart-items">
-            {cart.length === 0 && <h3>Your cart is empty.</h3>}
+        <div className="cart-container">
+          {cart.length === 0 ? (
+            <div className="empty-state">
+              <h3>Your cart is empty.</h3>
+              <p>Your caffeine levels are looking dangerously low!</p>
+              <Link to="/menu" className="shop-link">Go to Menu</Link>
+            </div>
+          ) : (
+            <div className="cart-items-list">
+              {cart.map((item, index) => (
+                <div key={item.id || index} className="cart-card animate-in">
+                  <img src={item.img} alt={item.name} className="item-img" />
+                  
+                  <div className="item-details">
+                    <div className="item-header">
+                      <div className="item-title-group">
+                        <h4>{item.name}</h4>
+                        {item.addons?.length > 0 && (
+                          <div className="addons-summary">
+                            {item.addons.map((a, i) => (
+                              <span key={i} className="addon-badge">
+                                +{a.name} (x{a.qty})
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <span className="item-price-tag">₱{calculateItemTotal(item)}</span>
+                    </div>
 
-            {cart.map((item, index) => (
-              <div key={index} className="cart-card">
-                <img src={item.img} alt={item.name} />
-
-                <div className="item-info">
-                  <h4>{item.name}</h4>
-                  <p>₱{item.basePrice || item.price}</p>
-
-                  {item.addons && item.addons.length > 0 && (
-                    <ul>
-                      {item.addons.map((a, i) => (
-                        <li key={i}>
-                          {a.name} x{a.qty} - ₱{a.price * a.qty}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="item-controls">
-                  <div className="qty">
-                    <button onClick={() => decreaseQty(index)}>-</button>
-                    <span className="count">{quantities[index]}</span>
-                    <button onClick={() => increaseQty(index)}>+</button>
+                    <div className="item-actions">
+                      <div className="qty-picker">
+                        <button onClick={() => updateQuantity(index, -1)}>−</button>
+                        <span className="qty-number">{item.quantity}</span>
+                        <button onClick={() => updateQuantity(index, 1)}>+</button>
+                      </div>
+                      <button className="remove-text" onClick={() => removeItem(index)}>
+                        Remove
+                      </button>
+                    </div>
                   </div>
-
-                  <button
-                    className="remove-btn"
-                    onClick={() => removeItem(index)}
-                  >
-                    Remove
-                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
-    </>
+    </div>
   );
 };
 

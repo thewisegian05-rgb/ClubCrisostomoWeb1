@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../../Components/MenupageComponents/Menupage.css";
 
-// Path to the image you provided (located in your public folder)
 const ITEM_IMG = "/process-preparing-espresso-professional-coffee-machine-closeup.jpg";
 
 const MENU_DATA = {
@@ -54,7 +53,6 @@ const INITIAL_ADDONS = {
   Espresso: 0, Syrup: 0, "Nata Jelly": 0, Cereal: 0, Oreo: 0, Cinnamon: 0, "Bottled Water": 0 
 };
 
-/* --- CAROUSEL COMPONENT --- */
 const AutoCarousel = ({ items, onCardClick }) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -97,6 +95,9 @@ export default function MenupageMain() {
   const [tempMode, setTempMode] = useState("hot"); 
   const [addons, setAddons] = useState(INITIAL_ADDONS);
   const [expandedSections, setExpandedSections] = useState({});
+  
+  // Notification State
+  const [notification, setNotification] = useState({ show: false, message: "" });
 
   useEffect(() => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
@@ -132,6 +133,7 @@ export default function MenupageMain() {
       basePrice: selectedItem.price,
       addons: activeAddons,
       total: calculateTotal(),
+      quantity: 1, // Default quantity for cart logic
       img: selectedItem.img,
       id: Date.now()
     };
@@ -140,10 +142,24 @@ export default function MenupageMain() {
     localStorage.setItem("cart", JSON.stringify(cart));
     setCartCount(cart.length);
     setModalOpen(false);
+
+    // Trigger Notification
+    setNotification({ show: true, message: `${selectedItem.name} added to cart!` });
+    setTimeout(() => setNotification({ show: false, message: "" }), 3000);
   };
 
   return (
     <div className="menu-page">
+      {/* Toast Notification */}
+      {notification.show && (
+        <div className="cart-notification animate-pop">
+          <div className="notif-content">
+            <span className="check-icon">✓</span>
+            {notification.message}
+          </div>
+        </div>
+      )}
+
       <nav className="navBar">
         <div className="nav-left">
           <Link to="/" className="logo-link">
@@ -213,14 +229,15 @@ export default function MenupageMain() {
             {selectedItem.type === "drink" && (
               <div className="temp-selection">
                 <p>Select Temperature</p>
-                <div className="temp-buttons">
+                <div className="temp-toggle-container">
+                  <span className={`selection-slider ${tempMode}`}></span>
                   <button 
-                    className={tempMode === "hot" ? "active" : ""} 
+                    className={`temp-btn ${tempMode === "hot" ? "active" : ""}`} 
                     onClick={() => setTempMode("hot")}
                     disabled={selectedItem.price === 0}
                   >Hot</button>
                   <button 
-                    className={tempMode === "iced" ? "active" : ""} 
+                    className={`temp-btn ${tempMode === "iced" ? "active" : ""}`} 
                     onClick={() => setTempMode("iced")}
                   >Iced</button>
                 </div>
@@ -236,12 +253,14 @@ export default function MenupageMain() {
               {Object.keys(ADDON_PRICES).map((addonKey) => (
                 <div className="addon-row" key={addonKey}>
                   <span className="addon-name">{addonKey}</span>
-                  <div className="qty-controls">
-                    <button onClick={() => updateAddon(addonKey, -1)}>−</button>
-                    <span className="count">{addons[addonKey]}</span>
-                    <button onClick={() => updateAddon(addonKey, 1)}>+</button>
+                  <div className="addon-controls-wrapper">
+                    <div className="qty-controls">
+                      <button onClick={() => updateAddon(addonKey, -1)}>−</button>
+                      <span className="count">{addons[addonKey]}</span>
+                      <button onClick={() => updateAddon(addonKey, 1)}>+</button>
+                    </div>
+                    <span className="addon-price">₱{ADDON_PRICES[addonKey]}</span>
                   </div>
-                  <span className="addon-price">₱{ADDON_PRICES[addonKey]}</span>
                 </div>
               ))}
             </div>
