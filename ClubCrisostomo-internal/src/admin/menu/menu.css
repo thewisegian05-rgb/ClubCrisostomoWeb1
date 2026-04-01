@@ -1,0 +1,448 @@
+/* --- MENU CSS (Upgraded to match Dashboard's Moody Aesthetic) --- */
+
+/* Base Layout */
+.menu-dashboard-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--bg-dark); 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-main);
+}
+
+.top-bar {
+    display: none; 
+}
+
+.menu-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* --- SIDEBAR --- */
+.menu-sidebar {
+    width: 250px;
+    background-color: var(--widget-dark);
+    display: flex;
+    flex-direction: column;
+    padding: 30px 0;
+    border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+.sidebar-title {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.sidebar-title h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--text-accent);
+    letter-spacing: 2px;
+}
+
+.menu-sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menu-sidebar-nav li {
+    padding: 15px 30px;
+    color: var(--text-main);
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.2s;
+}
+
+.menu-sidebar-nav li.active {
+    background-color: rgba(255, 255, 255, 0.08); 
+    color: var(--text-accent);
+    border-right: 3px solid var(--text-accent); 
+}
+
+.menu-sidebar-nav li:hover {
+    background-color: rgba(255, 255, 255, 0.03); 
+    color: var(--text-accent);
+}
+
+.menu-logout-btn {
+    margin-top: auto;
+    margin-inline: 20px;
+    padding: 12px;
+    background-color: rgba(0, 0, 0, 0.4);
+    color: var(--text-muted);
+    border: 1px solid rgba(255,255,255,0.1);
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 6px;
+}
+
+.menu-logout-btn:hover {
+    background-color: var(--text-accent);
+    color: var(--bg-dark);
+    border-color: var(--text-accent);
+}
+
+/* --- MAIN CONTENT --- */
+.menu-main-content {
+    flex: 1;
+    padding: 30px 40px;
+    overflow-y: auto;
+}
+
+/* Header */
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 30px;
+}
+
+.menu-header-titles h1 {
+    margin: 0 0 5px 0;
+    font-size: 1.8rem;
+    color: var(--text-accent);
+}
+
+.menu-header-titles p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.menu-header-actions {
+    display: flex;
+    gap: 15px;
+}
+
+/* Inputs & Filters */
+.menu-search-input, .menu-filter-input {
+    background-color: var(--widget-dark);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    width: 220px;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.menu-search-input:focus, .menu-filter-input:focus {
+    border-color: var(--text-accent);
+}
+
+/* Add Button */
+.add-btn-group {
+    display: flex;
+}
+
+.menu-add-btn {
+    background-color: var(--text-accent);
+    color: var(--bg-dark);
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px 0 0 8px;
+    transition: background-color 0.2s;
+}
+
+.menu-add-btn:hover {
+    background-color: var(--white);
+}
+
+.menu-dropdown-btn {
+    background-color: rgba(200, 162, 124, 0.8);
+    color: var(--bg-dark);
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 0 8px 8px 0;
+    border-left: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Controls & Filters */
+.menu-controls-section {
+    margin-bottom: 30px;
+}
+
+.menu-filters {
+    display: flex;
+    justify-content: flex-end; /* Pushes the search bar to the right */
+    margin-bottom: 20px;
+}
+
+/* Tabs */
+.menu-tabs {
+    display: flex;
+    gap: 30px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding-bottom: 10px;
+}
+
+.menu-tabs .tab {
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.2s;
+    position: relative;
+}
+
+.menu-tabs .tab:hover {
+    color: var(--white);
+}
+
+.menu-tabs .tab.active {
+    color: var(--text-accent);
+}
+
+.menu-tabs .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -11px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: var(--text-accent);
+    border-radius: 3px 3px 0 0;
+}
+
+/* --- MENU CARDS --- */
+.menu-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.menu-card {
+    background-color: var(--widget-dark);
+    display: flex;
+    justify-content: space-between;
+    padding: 25px;
+    align-items: center;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; 
+}
+
+.menu-card:hover {
+    transform: translateY(-5px) scale(1.01); 
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    border-color: rgba(200, 162, 124, 0.3);
+}
+
+.menu-card-left {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.menu-picture-placeholder {
+    width: 80px;
+    height: 80px;
+    background-color: rgba(0,0,0,0.2);
+    border: 1px dashed rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--text-muted);
+    border-radius: 8px;
+}
+
+.menu-details h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.3rem;
+    color: var(--white);
+    letter-spacing: 0.5px;
+}
+
+.menu-availability {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.availability-text {
+    color: var(--text-muted);
+}
+
+.availability-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.menu-cost {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.menu-card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 20px;
+}
+
+.menu-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.edit-btn {
+    background-color: transparent;
+    color: var(--text-accent);
+    border: 1px solid var(--text-accent);
+    padding: 6px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.edit-btn:hover {
+    background-color: var(--text-accent);
+    color: var(--bg-dark);
+}
+
+.delete-btn {
+    background-color: transparent;
+    color: var(--text-muted);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 6px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.delete-btn:hover {
+    background-color: rgba(239, 83, 80, 0.1);
+    color: #ef5350;
+    border-color: rgba(239, 83, 80, 0.3);
+}
+
+.menu-price {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--white);
+}
+
+/* --- CUSTOM MODAL STYLES --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.custom-modal {
+    background-color: var(--widget-dark);
+    padding: 30px 40px;
+    border-radius: 12px;
+    width: 450px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.5);
+    border: 1px solid rgba(200, 162, 124, 0.2); 
+}
+
+.custom-modal h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    color: var(--text-accent);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+/* Combined styling for inputs AND dropdowns */
+.form-group input, 
+.form-group select {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    border-radius: 6px;
+    color: var(--text-main);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus, 
+.form-group select:focus {
+    border-color: var(--text-accent);
+}
+
+/* Fix for dark mode dropdown text visibility */
+.form-group select option {
+    background-color: #2b3238; 
+    color: #ffffff;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.cancel-btn {
+    background-color: transparent;
+    color: var(--text-muted);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.cancel-btn:hover {
+    color: var(--text-main);
+    background-color: rgba(255,255,255,0.05);
+}
+
+.save-btn {
+    background-color: var(--text-accent);
+    color: var(--bg-dark);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.save-btn:hover {
+    background-color: var(--white);
+}

@@ -1,0 +1,114 @@
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.form-group label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+.form-input:disabled {
+    background-color: rgba(0,0,0,0.4);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.preference-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Custom Toggle Switch for Dark Theme */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: .4s;
+    border-radius: 34px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-muted);
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: rgba(200, 162, 124, 0.2);
+    border-color: var(--text-accent);
+}
+input:checked + .slider:before {
+    transform: translateX(24px);
+    background-color: var(--text-accent);
+}
+
+/* --- DYNAMIC THEME CLASSES (Added for React State) --- */
+
+/* High Contrast Mode Overrides */
+body.high-contrast-mode {
+    --text-accent: #ffd700; /* Much brighter yellow/gold */
+    --text-muted: #ffffff; /* Make muted text pure white */
+}
+body.high-contrast-mode * {
+    font-weight: bold !important;
+    letter-spacing: 0.5px;
+}
+body.high-contrast-mode .widget {
+    border: 2px solid #ffffff; /* Hard white border for visibility */
+}
+
+/* Light Theme Overrides */
+body.light-theme {
+    background-color: #f0f2f5;
+    color: #1a1a1a;
+}
+body.light-theme .dashboard-container,
+body.light-theme .main-content {
+    background-color: #f0f2f5;
+}
+body.light-theme .widget {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+body.light-theme h1, 
+body.light-theme h2, 
+body.light-theme strong,
+body.light-theme label {
+    color: #1a1a1a !important; 
+}
+body.light-theme .text-muted {
+    color: #666666 !important;
+}
+body.light-theme .form-input {
+    background-color: #ffffff;
+    color: #333333;
+    border: 1px solid #cccccc;
+}
+body.light-theme .preference-item {
+    border-bottom: 1px solid #eeeeee;
+}
+body.light-theme .form-input:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+}

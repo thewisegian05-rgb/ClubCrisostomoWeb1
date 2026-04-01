@@ -1,0 +1,181 @@
+/* --- INVENTORY SPECIFIC STYLES --- */
+
+.inventory-header {
+    background-color: rgba(0,0,0,0.2);
+    border-bottom: 1px dashed rgba(255,255,255,0.1);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.inv-qty-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-accent);
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.inv-qty-btn:hover {
+    background-color: rgba(212, 163, 115, 0.15);
+    border-color: var(--text-accent);
+}
+
+.inv-qty-btn:active {
+    transform: scale(0.9);
+}
+
+.inv-action-btn {
+    background-color: transparent;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.writeoff-btn {
+    border: 1px solid #ff9800;
+    color: #ff9800;
+}
+
+.writeoff-btn:hover {
+    background-color: rgba(255, 152, 0, 0.1);
+}
+
+.oos-btn {
+    border: 1px solid #ef5350;
+    color: #ef5350;
+}
+
+.oos-btn:hover:not(:disabled) {
+    background-color: rgba(239, 83, 80, 0.1);
+}
+
+.oos-btn:disabled {
+    cursor: not-allowed;
+    border-color: #555;
+    color: #555;
+}
+/* --- NEW INVENTORY ACTION BUTTONS --- */
+
+.restock-btn {
+    border: 1px solid #4caf50;
+    color: #4caf50;
+}
+
+.restock-btn:hover:not(:disabled) {
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+.restock-btn:disabled {
+    cursor: not-allowed;
+    border-color: #555;
+    color: #555;
+}
+/* --- RECEIVE DELIVERY BUTTON --- */
+.receive-btn {
+    border: 1px solid #2196f3; /* Blue */
+    color: #2196f3;
+}
+
+.receive-btn:hover {
+    background-color: rgba(33, 150, 243, 0.1);
+}
+/* --- CLEANER ACTION BUTTONS --- */
+.inv-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    border: 1px solid transparent;
+}
+
+.inv-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Primary actions stand out */
+.primary-action {
+    background-color: rgba(200, 162, 124, 0.15);
+    color: var(--text-accent);
+    border-color: var(--text-accent);
+}
+
+.primary-action:hover:not(:disabled) {
+    background-color: var(--text-accent);
+    color: var(--bg-dark);
+}
+
+/* Secondary actions fade into the background */
+.secondary-action {
+    background-color: transparent;
+    color: var(--text-muted);
+    border-color: rgba(255,255,255,0.1);
+}
+
+.secondary-action:hover:not(:disabled) {
+    color: #fff;
+    border-color: rgba(255,255,255,0.3);
+}
+
+/* Danger actions */
+.danger-action {
+    background-color: transparent;
+    color: #ef5350;
+    border-color: rgba(239, 83, 80, 0.3);
+}
+
+.danger-action:hover:not(:disabled) {
+    background-color: rgba(239, 83, 80, 0.1);
+}
+
+/* --- PILL-SHAPED TALLY STEPPER --- */
+.tally-stepper {
+    display: flex;
+    align-items: center;
+    background-color: #111111;
+    border-radius: 20px;
+    padding: 2px;
+    border: 1px solid rgba(255,255,255,0.05);
+    width: 100px;
+    justify-content: space-between;
+}
+
+.tally-stepper button {
+    background: transparent;
+    border: none;
+    color: var(--text-accent);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.2s;
+}
+
+.tally-stepper button:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.tally-stepper .tally-value {
+    font-weight: bold;
+    color: #fff;
+    font-size: 0.95rem;
+}

@@ -1,0 +1,318 @@
+/* --- UPDATED GLOBAL DASHBOARD VARIABLES (Matched to Homepage) --- */
+:root {
+    --bg-dark: #181818;      /* Main background from homepage */
+    --widget-dark: #2C3639;  /* Navbar grey from homepage - used for cards/sidebar */
+    --text-main: #DCD7C9;    /* Light beige from homepage */
+    --text-accent: #C8A27C;  /* Coffee gold accent from homepage */
+    --text-muted: #888;      /* Subdued grey */
+    --white: #FFFFFF;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* --- SIDEBAR (Moody Update) --- */
+.sidebar {
+    width: 250px;
+    background-color: var(--widget-dark); /* Using Nav Grey */
+    display: flex;
+    flex-direction: column;
+    padding: 30px 0;
+    border-right: 1px solid rgba(255,255,255,0.05); /* Subtle divider */
+}
+
+.sidebar-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--text-accent); /* Gold Logo */
+    letter-spacing: 2px;
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav li {
+    padding: 15px 30px;
+    color: var(--text-main); /* Beige Text */
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.2s;
+}
+
+/* Hover/Active states now use gold accents */
+.sidebar-nav li:hover, .sidebar-nav li.active {
+    background-color: rgba(200, 162, 124, 0.1); /* Gold tint */
+    color: var(--text-accent);
+}
+
+.logout-btn {
+    margin-top: auto;
+    margin-inline: 20px;
+    padding: 12px;
+    background-color: rgba(0, 0, 0, 0.4);
+    color: var(--text-muted);
+    border: 1px solid rgba(255,255,255,0.1);
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.logout-btn:hover {
+    background-color: var(--text-accent);
+    color: var(--bg-dark);
+    border-color: var(--text-accent);
+}
+
+/* --- MAIN CONTENT (Moody Update) --- */
+.main-content {
+    flex: 1;
+    padding: 30px 40px;
+    overflow-y: auto;
+}
+
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.top-header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--text-accent); /* Welcome Gold */
+}
+
+.user-info {
+    background-color: var(--widget-dark);
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    font-weight: bold;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* --- TOP METRICS GRID --- */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.metric-card {
+    background-color: var(--widget-dark); /* Card Grey */
+    padding: 25px 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); /* Deeper shadow */
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.03);
+    
+    /* Animation settings */
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    cursor: pointer;
+}
+
+/* Updated Hover State for Moody Theme */
+.metric-card:hover {
+    transform: translateY(-5px) scale(1.02); /* Slight lift and zoom */
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    border-color: rgba(200, 162, 124, 0.3); /* Subtle gold glow border */
+}
+
+.card-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--white); /* Crisp White Numbers */
+    margin-bottom: 10px;
+}
+
+.card-value.small { font-size: 1.4rem; }
+
+.card-label, .card-label-top {
+    font-size: 0.9rem;
+    color: var(--text-muted); /* Muted labels */
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.card-trend.positive {
+    color: #81c784; /* Softer, desaturated green trend */
+    font-size: 0.85rem;
+    margin-top: 12px;
+    font-weight: bold;
+}
+
+/* --- MAIN WIDGETS GRID --- */
+.widgets-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+.widget {
+    background-color: var(--widget-dark);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.03);
+}
+
+.widget h2 {
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--text-accent); /* Widget titles in Gold */
+    letter-spacing: 1px;
+}
+
+/* LEFT COLUMN WIDGETS */
+.left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.chart-widget .widget-header span {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.chart-placeholder {
+    height: 200px;
+    background-color: rgba(0,0,0,0.2); /* Darker inset */
+    border: 1px dashed rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
+
+.bottom-widgets-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* STAFF WIDGET (Subdued Badges) */
+.staff-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.staff-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.staff-info { font-size: 0.9rem; color: var(--text-muted); }
+.staff-info strong { color: var(--text-main); font-size: 1rem; }
+
+.status-badge {
+    padding: 5px 15px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+/* Desaturated Status Colors */
+.status-badge.active { background-color: #2e7d32; color: white; }
+.status-badge.break { background-color: #fbc02d; color: #181818; }
+
+/* RIGHT COLUMN WIDGETS */
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Standardized Moody Queue Indicators */
+.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; }
+.yellow-dot { background-color: var(--text-accent); } /* Reuse Gold */
+.blue-dot { background-color: #1976d2; }
+.green-dot { background-color: #81c784; }
+
+.status-item { display: flex; align-items: center; margin-bottom: 15px; font-size: 0.95rem; }
+.status-item strong { margin-left: 15px; color: var(--white); }
+
+.count-badge {
+    margin-left: auto;
+    padding: 3px 12px;
+    border-radius: 12px;
+    color: var(--white);
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+/* Softer badges */
+.count-badge.green { background-color: #2e7d32; }
+.count-badge.blue { background-color: #1565c0; }
+
+/* FEEDBACK WIDGET (Darker Inset) */
+.feedback-card {
+    background-color: rgba(0,0,0,0.2); /* Inset Dark */
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,0.03);
+}
+
+.feedback-card .stars {
+    font-size: 0.8rem;
+    color: var(--text-accent); /* Gold Stars */
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.feedback-card .time { color: var(--text-muted); }
+
+.feedback-card p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    line-height: 1.4;
+}
+
+/* SMART INSIGHT WIDGET (Removed light block) */
+.insights-widget {
+    background-color: var(--widget-dark) !important; /* Back to normal grey */
+}
+
+.insight-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+}
+
+.insight-row strong {
+    color: var(--text-accent); /* Accentuate predictive data in gold */
+    font-size: 1.1rem;
+}
