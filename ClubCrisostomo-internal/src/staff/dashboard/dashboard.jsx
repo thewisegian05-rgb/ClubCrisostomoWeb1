@@ -7,17 +7,35 @@ const StaffDashboard = () => {
   const navigate = useNavigate();
   
   const [activeModal, setActiveModal] = useState(null);
-  const [isClockedIn, setIsClockedIn] = useState(false);
-  const [shiftStatus, setShiftStatus] = useState("Active"); 
 
   // --- DYNAMIC DATA STATES ---
   const [pendingCount, setPendingCount] = useState(0);
   const [preparingCount, setPreparingCount] = useState(0);
   const [activeOrdersList, setActiveOrdersList] = useState([]);
+  
+  // LIVE STAFF STATE
+  const [dynamicStaffData, setDynamicStaffData] = useState([]);
 
-  // NEW: Inventory Summary States
+  // Inventory Summary States
   const [lowCounterItems, setLowCounterItems] = useState(0);
   const [lowBackroomItems, setLowBackroomItems] = useState(0);
+
+  // --- TO DO LIST STATE ---
+  const [tasks, setTasks] = useState([
+    { id: 1, text: "Clock in and review shift announcements", completed: false },
+    { id: 2, text: "Check inventory alerts & restock counter", completed: false },
+    { id: 3, text: "Counter check the inventory (On-counter & Backroom)", completed: false },
+    { id: 4, text: "Counter check the drawer", completed: false },
+    { id: 5, text: "Clean and prepare your station", completed: false },
+    { id: 6, text: "Clean the dining area and your work stations.", completed: false },
+    { id: 7, text: "Clean the restrooms.", completed: false }
+  ]);
+
+  const toggleTask = (id) => {
+    setTasks(tasks.map(task => 
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  };
 
   useEffect(() => {
       const loadData = () => {
@@ -36,15 +54,28 @@ const StaffDashboard = () => {
           const savedInventory = localStorage.getItem("clubC_inventory");
           if (savedInventory) {
               const parsedInv = JSON.parse(savedInventory);
-              
-              // Counter Low: Anything status 'Critical' or 'Low stock'
               const counterLow = parsedInv.filter(item => item.status === 'Critical' || item.status === 'Low stock').length;
-              
-              // Backroom Low: Anything with 2 or less packages (based on our StaffInventory logic)
               const backroomLow = parsedInv.filter(item => (parseFloat(item.backStock) || 0) <= 2).length;
 
               setLowCounterItems(counterLow);
               setLowBackroomItems(backroomLow);
+          }
+
+          // 3. Process Live Staff Data
+          const savedStaff = localStorage.getItem('clubC_staffData');
+          if (savedStaff) {
+              setDynamicStaffData(JSON.parse(savedStaff));
+          } else {
+              // Fallback default array if attendance page hasn't been opened yet
+              const defaultData = [
+                { id: 'STF001', name: 'Gian', role: 'Barista', status: 'On Leave', shift: 'Mon-Wed 8AM - 5PM', initial: 'G', pin: '1111', currentAction: 'Off Shift' },
+                { id: 'STF002', name: 'Cyrus', role: 'Barista', status: 'Active', shift: 'Flexible', initial: 'C', pin: '2222', currentAction: 'Clocked In' },
+                { id: 'STF003', name: 'Kimmy', role: 'Part-time Cook', status: 'Inactive', shift: 'Mon-Fri 8AM - 5PM', initial: 'K', pin: '3333', currentAction: 'Off Shift' },
+                { id: 'STF004', name: 'Zairyl', role: 'Cashier', status: 'Active', shift: 'Sat - Sun 8AM - 5PM', initial: 'Z', pin: '4444', currentAction: 'Clocked In' },
+                { id: 'STF005', name: 'Samantha', role: 'Cook', status: 'Active', shift: 'Sat - Sun 8AM - 5PM', initial: 'S', pin: '5555', currentAction: 'Clocked In' }
+              ];
+              setDynamicStaffData(defaultData);
+              localStorage.setItem('clubC_staffData', JSON.stringify(defaultData));
           }
       };
 
@@ -53,16 +84,10 @@ const StaffDashboard = () => {
       return () => window.removeEventListener('storage', loadData);
   }, []);
 
-  const activeStaffLogs = [
-    { name: "Kulas (Cashier)", status: "Active", time: "07:00 AM" },
-    { name: "Ba2te (Barista)", status: "Active", time: "06:30 AM" },
-    { name: "Juan (Server)", status: "Break", time: "08:00 AM" }
-  ];
-
   const renderStatusBadge = (status) => {
-    let color = "#81c784"; 
-    if (status === "Break") color = "#fbc02d";
-    if (status === "Offline" || status === "Pending") color = "#888";
+    let color = "#888"; // Default for Inactive / On Leave
+    if (status === "Active") color = "#81c784";
+    if (status === "On Break" || status === "Break") color = "#fbc02d";
     if (status === "Preparing") color = "#ff9800";
 
     return (
@@ -118,10 +143,13 @@ const StaffDashboard = () => {
             <>
               <h2 className="modal-title">Shift Management</h2>
               <div className="modal-list">
-                {activeStaffLogs.map((log, index) => (
-                  <div key={index} className="modal-list-item">
-                    <div><strong>{log.name}</strong> <span className="text-muted" style={{fontSize: "0.8rem"}}>• In at {log.time}</span></div>
-                    {renderStatusBadge(log.status)}
+                {dynamicStaffData.map((staff) => (
+                  <div key={staff.id} className="modal-list-item">
+                    <div>
+                        <strong>{staff.name}</strong> 
+                        <span className="text-muted" style={{fontSize: "0.8rem"}}> • {staff.role}</span>
+                    </div>
+                    {renderStatusBadge(staff.status)}
                   </div>
                 ))}
               </div>
@@ -156,7 +184,7 @@ const StaffDashboard = () => {
                 <div className="card-trend positive" style={{color: "var(--text-muted)"}}>Click to view queue</div>
               </div>
               
-              {/* STOCK ALERT CARD - DYNAMIC CONTENT */}
+              {/* STOCK ALERT CARD */}
               <div className="metric-card" onClick={() => setActiveModal("stock")} style={{display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center"}}>
                 {(lowCounterItems > 0 || lowBackroomItems > 0) ? (
                     <>
@@ -174,35 +202,56 @@ const StaffDashboard = () => {
               </div>
             </div>
 
-            <div className="future-widget-placeholder">
-              <p>Ready for next widget (e.g., Live Order Feed)</p>
+            {/* NEW TO-DO LIST WIDGET */}
+            <div className="metric-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', textAlign: 'left', cursor: 'default' }}>
+              <div className="card-label-top" style={{margin: '0 0 15px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '15px', color: 'var(--text-accent)', fontSize: '1.1rem'}}>
+                Shift To-Do List
+              </div>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto'}}>
+                {tasks.map(task => (
+                  <label key={task.id} style={{display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer'}}>
+                    <input 
+                      type="checkbox" 
+                      checked={task.completed} 
+                      onChange={() => toggleTask(task.id)}
+                      style={{ accentColor: '#C8A27C', width: '18px', height: '18px', marginTop: '2px', cursor: 'pointer' }}
+                    />
+                    <span style={{ 
+                      textDecoration: task.completed ? 'line-through' : 'none', 
+                      color: task.completed ? 'var(--text-muted)' : 'var(--text-main)',
+                      transition: 'all 0.2s ease',
+                      lineHeight: '1.4'
+                    }}>
+                      {task.text}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 
           <div className="right-column">
             <div className="metric-card shift-widget" onClick={() => setActiveModal("shift")}>
               <div style={{display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "15px"}}>
-                  <div className="card-label-top" style={{margin: 0}}>Your Shift</div>
-                  <div style={{textAlign: "right"}}>
-                      <span className="card-trend positive" style={{
-                          color: isClockedIn ? "#81c784" : "#e74c3c", 
-                          display: "block", fontSize: "1rem", fontWeight: "bold", margin: 0
-                      }}>
-                          {isClockedIn ? shiftStatus : "Clocked Out"}
-                      </span>
-                  </div>
+                  <div className="card-label-top" style={{margin: 0}}>Attendance and Status</div>
+                  {/* Removed the Clocked Out placeholder div entirely */}
               </div>
               <div style={{borderBottom: "1px solid rgba(255,255,255,0.05)", margin: "0 -20px 15px -20px"}}></div>
               <div className="preview-list">
-                {activeStaffLogs.slice(0, 3).map((log, index) => (
-                  <div key={index} className="preview-list-item">
+                
+                {/* Removed the .slice(0,3) so it maps through ALL members */}
+                {dynamicStaffData.map((staff) => (
+                  <div key={staff.id} className="preview-list-item">
                     <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
-                        <div className="initial-placeholder">{log.name.charAt(0)}</div>
-                        <div style={{fontSize: "0.85rem", color: "var(--text-main)"}}>{log.name}</div>
+                        <div className="initial-placeholder">{staff.initial}</div>
+                        <div style={{fontSize: "0.85rem", color: "var(--text-main)"}}>
+                            {staff.name} <span style={{fontSize: "0.75rem", color: "var(--text-muted)"}}>({staff.role})</span>
+                        </div>
                     </div>
-                    {renderStatusBadge(log.status)}
+                    {renderStatusBadge(staff.status)}
                   </div>
                 ))}
+
               </div>
               <div className="card-trend" style={{marginTop: "15px", textAlign: "center", color: "var(--text-muted)"}}>Click to view full list</div>
             </div>

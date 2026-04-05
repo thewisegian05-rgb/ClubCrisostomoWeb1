@@ -1,0 +1,140 @@
+/* --- GLOBAL THEME VARIABLES --- */
+:root {
+  --primary-dark-bg: #1a1a1a; /* Darkest bg */
+  --card-dark-bg: #2a2a2a;    /* Dark panels/cards */
+  --sub-card-bg: #222222;     /* Inset panels */
+  --accent-gold: #b5946c;     /* Main accent color */
+  --accent-gold-hover: #c9ab85;
+  --text-light: #e0e0e0;
+  --text-darker: #aaaaaa;
+  --text-muted: #888888;
+}
+
+body {
+  margin: 0;
+  background-color: var(--primary-dark-bg);
+  color: var(--text-light);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- LAYOUT --- */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 30px 40px;
+  overflow-y: auto;
+}
+
+/* --- HEADER --- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--text-light);
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+/* --- BUTTONS --- */
+.action-btn {
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.action-btn-active-gold {
+  background-color: var(--accent-gold);
+  color: #1a1a1a;
+}
+
+.action-btn-active-gold:hover {
+  background-color: var(--accent-gold-hover);
+}
+
+/* --- PANELS & CARDS --- */
+.panel {
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  overflow: hidden; /* Keeps the table corners clean */
+}
+
+.card-dark {
+  background-color: var(--card-dark-bg);
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+.panel-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--accent-gold);
+  letter-spacing: 0.5px;
+}
+
+/* --- PAYROLL TABLE --- */
+.logs-table {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.logs-header-row {
+  display: grid;
+  color: var(--accent-gold);
+  font-size: 12px;
+  font-weight: bold;
+  border-bottom: 1px solid #444;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  align-items: center;
+}
+
+.logs-row {
+  display: grid;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  align-items: center;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.logs-row:hover {
+  background-color: rgba(255,255,255,0.02);
+}
+
+.logs-row:last-child {
+  border-bottom: none;
+}
+
+.empty-logs {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-darker);
+  font-style: italic;
+}

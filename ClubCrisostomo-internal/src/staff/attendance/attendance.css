@@ -443,3 +443,49 @@
   color: var(--text-darker);
   font-size: 13px;
 }
+
+/* --- SHIFT LOGS PANEL (Bottom) --- */
+.logs-panel {
+  margin-top: 20px;
+  box-sizing: border-box; /* This fixes the horizontal scrollbar */
+}
+
+.logs-table {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.logs-header-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.5fr 1fr;
+  padding: 10px 15px;
+  color: var(--accent-gold);
+  font-size: 13px;
+  font-weight: bold;
+  border-bottom: 1px solid #333;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  gap: 15px;
+}
+
+.logs-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.5fr 1fr;
+  padding: 15px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  align-items: center;
+  font-size: 14px;
+  gap: 15px;
+}
+
+.logs-row:last-child {
+  border-bottom: none;
+}
+
+.empty-logs {
+  padding: 30px;
+  text-align: center;
+  color: var(--text-darker);
+  font-style: italic;
+}

@@ -11,10 +11,10 @@ const AdminDashboard = () => {
 
     return (
         <div className="dashboard-container">
-            {/* SIDEBAR */}
+            {/* --- ADMIN SIDEBAR (Matched exactly to Staff page) --- */}
             <aside className="sidebar">
                 <div className="sidebar-header">
-                    <h2>CLUB C.</h2>
+                    <h2 style={{ color: '#c8a27c', margin: '20px 0', fontSize: '24px', letterSpacing: '1px' }}>CLUB C.</h2>
                 </div>
                 <nav className="sidebar-nav">
                     <ul>
@@ -85,8 +85,7 @@ const AdminDashboard = () => {
                                 <span>Last 7 Days Revenue</span>
                             </div>
                             <div className="chart-placeholder">
-                                {/* We will add Recharts here later! */}
-                                <div className="mock-chart-line"></div>
+                                {/* The labels are now safely trapped inside this relative container! */}
                                 <div className="chart-axes">
                                     <div className="y-axis">
                                         <span>₱8,000</span>

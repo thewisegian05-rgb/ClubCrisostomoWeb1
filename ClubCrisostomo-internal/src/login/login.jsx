@@ -1,37 +1,46 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { auth } from "../firebase.js"; // <-- Import your Firebase setup
+import { signInWithEmailAndPassword } from "firebase/auth"; // <-- Import Firebase login function
 import "./login.css";
 
 const Login = () => {
-  const [credentials, setCredentials] = useState({ username: "", password: "" });
+  // Note: Changed "username" to "email" to match Firebase rules
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
   const navigate = useNavigate(); 
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Fetch the updated credentials from Settings
-    // (If you haven't changed it yet, it defaults to Admin@gmail.com and 1234)
-    const savedAdminEmail = localStorage.getItem('clubC_admin_email') || "Admin@gmail.com";
-    const savedAdminPass = localStorage.getItem('clubC_admin_password') || "1234";
+    try {
+      // 1. Send the email and password to Firebase
+      const userCredential = await signInWithEmailAndPassword(
+        auth, 
+        credentials.email, 
+        credentials.password
+      );
+      
+      const loggedInEmail = userCredential.user.email;
 
-    // --- STRICT ADMIN LOGIN ---
-    if (credentials.username === savedAdminEmail && credentials.password === savedAdminPass) {
-      navigate("/admin"); 
-    } 
-    // --- STAFF LOGIN ---
-    else if (credentials.username === "staff" && credentials.password === "1234") {
-      navigate("/staff/dashboard"); // Fixed this line to match App.jsx
-    } 
-    // --- ERROR ---
-    else {
-      alert("Invalid credentials! Please check your email/username and password.");
+      // 2. Check who just logged in, and route them to the correct dashboard!
+      if (loggedInEmail.includes("admin")) {
+        navigate("/admin"); 
+      } else {
+        navigate("/staff/dashboard"); 
+      }
+
+    } catch (error) {
+      // If Firebase rejects the password or email, show an error
+      console.error(error.message);
+      alert("Invalid credentials! Please check your email and password.");
     }
   };
 
+  // Fade-in animation
   useEffect(() => {
     const card = document.querySelector(".login-card");
     if (card) {
@@ -49,15 +58,15 @@ const Login = () => {
         
         <form onSubmit={handleSubmit} className="login-form">
           <div className="input-group">
-            <label htmlFor="username">Admin Email / Staff ID</label>
+            <label htmlFor="email">Email Address</label>
             <input 
-              type="text" 
-              id="username" 
-              name="username" 
-              value={credentials.username} 
+              type="email" 
+              id="email" 
+              name="email" 
+              value={credentials.email} 
               onChange={handleChange} 
               required 
-              placeholder="e.g. Admin@gmail.com"
+              placeholder="e.g. admin@clubc.com"
               autoComplete="off"
             />
           </div>

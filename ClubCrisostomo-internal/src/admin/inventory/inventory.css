@@ -1,4 +1,101 @@
-/* We can reuse the main layout rules from dashboard.css since they share the same structure */
+/* --- GLOBALS MATCHED TO ADMIN DASHBOARD --- */
+:root {
+    --bg-dark: #1a1a1a;
+    --widget-dark: #2a2a2a;
+    --text-main: #e0e0e0;
+    --text-accent: #c8a27c;
+    --text-muted: #888;
+    --white: #FFFFFF;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* --- SIDEBAR (Matched to Dashboard) --- */
+.sidebar {
+    width: 250px;
+    background-color: #2b3238; 
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    height: 100vh;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+}
+
+.sidebar-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sidebar-nav li {
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #a0aab2;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.2s ease;
+}
+
+.sidebar-nav li:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+}
+
+.sidebar-nav li.active {
+    color: var(--text-accent);
+    background-color: rgba(200, 162, 124, 0.1);
+    border-left: 4px solid var(--text-accent);
+}
+
+.logout-btn {
+    margin-top: auto;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #a0aab2;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.logout-btn:hover {
+    background-color: #ef5350;
+    color: white;
+}
+
+/* --- MAIN CONTENT --- */
+.main-content {
+    flex: 1;
+    padding: 30px 40px;
+    overflow-y: auto;
+}
+
 .inventory-header {
     display: flex;
     justify-content: space-between;
@@ -9,7 +106,7 @@
 .header-titles h1 {
     margin: 0 0 5px 0;
     font-size: 2rem;
-    color: var(--text-accent); /* Gold */
+    color: var(--text-accent);
 }
 
 .header-titles p {
@@ -21,19 +118,45 @@
 .header-actions {
     display: flex;
     gap: 15px;
+    align-items: center;
 }
 
-.search-input, .filter-input, .category-select {
+/* Matched Search Bar Style */
+.search-bar {
     background-color: var(--widget-dark);
-    border: 1px solid rgba(255,255,255,0.1);
+    padding: 8px 15px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 250px;
+    border: 1px solid #444;
+}
+
+.search-input {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    width: 100%;
+    outline: none;
+}
+
+.search-icon {
+    color: var(--text-muted);
+}
+
+.category-select {
+    background-color: var(--widget-dark);
+    border: 1px solid #444;
     color: var(--text-main);
     padding: 10px 15px;
     border-radius: 6px;
     outline: none;
     font-family: inherit;
+    cursor: pointer;
 }
 
-.search-input:focus, .filter-input:focus, .category-select:focus {
+.category-select:focus {
     border-color: var(--text-accent);
 }
 
@@ -52,7 +175,7 @@
     background-color: var(--text-main);
 }
 
-/* --- TABS FOR INVENTORY --- */
+/* --- TABS --- */
 .inventory-tabs {
     display: flex;
     gap: 30px;
@@ -111,27 +234,6 @@
     font-size: 0.95rem;
 }
 
-.insight-text span {
-    color: #ef5350; /* Red emphasis for critical items */
-    font-weight: bold;
-}
-
-.auto-reorder-btn {
-    background-color: transparent;
-    color: var(--text-accent);
-    border: 1px solid var(--text-accent);
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.2s;
-}
-
-.auto-reorder-btn:hover {
-    background-color: var(--text-accent);
-    color: var(--bg-dark);
-}
-
 /* --- CONTROLS & LEGEND --- */
 .inventory-controls {
     display: flex;
@@ -153,6 +255,16 @@
     font-weight: 600;
 }
 
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.green-dot { background-color: #81c784; }
+.yellow-dot { background-color: var(--text-accent); }
 .red-dot { background-color: #ef5350; }
 
 /* --- INVENTORY LIST TABLE --- */
@@ -271,6 +383,7 @@
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(5px);
 }
 
 .custom-modal {
@@ -278,8 +391,8 @@
     padding: 30px 40px;
     border-radius: 12px;
     width: 400px;
-    box-shadow: 0 15px 50px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 15px 50px rgba(0,0,0,0.8);
+    border: 1px solid #444;
 }
 
 .custom-modal h2 {
@@ -304,9 +417,9 @@
 .form-group input,
 .form-group select {
     background-color: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid #444;
     padding: 12px;
-    border-radius: 6px;
+    border-radius: 8px;
     color: var(--text-main);
     font-size: 1rem;
     outline: none;

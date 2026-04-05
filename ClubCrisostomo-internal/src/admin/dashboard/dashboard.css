@@ -1,9 +1,9 @@
 /* --- UPDATED GLOBAL DASHBOARD VARIABLES (Matched to Homepage) --- */
 :root {
-    --bg-dark: #181818;      /* Main background from homepage */
-    --widget-dark: #2C3639;  /* Navbar grey from homepage - used for cards/sidebar */
-    --text-main: #DCD7C9;    /* Light beige from homepage */
-    --text-accent: #C8A27C;  /* Coffee gold accent from homepage */
+    --bg-dark: #1a1a1a;      /* Main background from homepage */
+    --widget-dark: #2a2a2a;  /* Navbar grey from homepage - used for cards/sidebar */
+    --text-main: #e0e0e0;    /* Light beige from homepage */
+    --text-accent: #c8a27c;  /* Coffee gold accent from homepage */
     --text-muted: #888;      /* Subdued grey */
     --white: #FFFFFF;
 }
@@ -20,25 +20,29 @@ body {
     min-height: 100vh;
 }
 
-/* --- SIDEBAR (Moody Update) --- */
+/* --- SIDEBAR (Perfect Match to Staff UI) --- */
 .sidebar {
     width: 250px;
-    background-color: var(--widget-dark); /* Using Nav Grey */
+    background-color: #2b3238; 
     display: flex;
     flex-direction: column;
-    padding: 30px 0;
-    border-right: 1px solid rgba(255,255,255,0.05); /* Subtle divider */
+    padding: 20px;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    height: 100vh;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
 }
 
 .sidebar-header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
 }
 
 .sidebar-header h2 {
     margin: 0;
     font-size: 1.8rem;
-    color: var(--text-accent); /* Gold Logo */
+    color: var(--text-accent); 
     letter-spacing: 2px;
 }
 
@@ -46,41 +50,50 @@ body {
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .sidebar-nav li {
-    padding: 15px 30px;
-    color: var(--text-main); /* Beige Text */
-    font-weight: 600;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #a0aab2;
     cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
     display: flex;
     align-items: center;
     gap: 15px;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
-/* Hover/Active states now use gold accents */
-.sidebar-nav li:hover, .sidebar-nav li.active {
-    background-color: rgba(200, 162, 124, 0.1); /* Gold tint */
-    color: var(--text-accent);
+.sidebar-nav li:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+}
+
+.sidebar-nav li.active {
+    color: #c8a27c;
+    background-color: rgba(200, 162, 124, 0.1);
+    border-left: 4px solid #c8a27c;
 }
 
 .logout-btn {
     margin-top: auto;
-    margin-inline: 20px;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #a0aab2;
+    border: none;
     padding: 12px;
-    background-color: rgba(0, 0, 0, 0.4);
-    color: var(--text-muted);
-    border: 1px solid rgba(255,255,255,0.1);
-    font-weight: bold;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s;
+    font-weight: bold;
+    transition: background-color 0.2s;
 }
 
 .logout-btn:hover {
-    background-color: var(--text-accent);
-    color: var(--bg-dark);
-    border-color: var(--text-accent);
+    background-color: #ef5350;
+    color: white;
 }
 
 /* --- MAIN CONTENT (Moody Update) --- */
@@ -100,7 +113,7 @@ body {
 .top-header h1 {
     margin: 0;
     font-size: 1.8rem;
-    color: var(--text-accent); /* Welcome Gold */
+    color: var(--text-accent); 
 }
 
 .user-info {
@@ -123,29 +136,26 @@ body {
 }
 
 .metric-card {
-    background-color: var(--widget-dark); /* Card Grey */
+    background-color: var(--widget-dark); 
     padding: 25px 20px;
     border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3); /* Deeper shadow */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
     text-align: center;
     border: 1px solid rgba(255,255,255,0.03);
-    
-    /* Animation settings */
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     cursor: pointer;
 }
 
-/* Updated Hover State for Moody Theme */
 .metric-card:hover {
-    transform: translateY(-5px) scale(1.02); /* Slight lift and zoom */
+    transform: translateY(-5px) scale(1.02); 
     box-shadow: 0 15px 40px rgba(0,0,0,0.5);
-    border-color: rgba(200, 162, 124, 0.3); /* Subtle gold glow border */
+    border-color: rgba(200, 162, 124, 0.3); 
 }
 
 .card-value {
     font-size: 2rem;
     font-weight: bold;
-    color: var(--white); /* Crisp White Numbers */
+    color: var(--white); 
     margin-bottom: 10px;
 }
 
@@ -153,13 +163,13 @@ body {
 
 .card-label, .card-label-top {
     font-size: 0.9rem;
-    color: var(--text-muted); /* Muted labels */
+    color: var(--text-muted); 
     font-weight: 600;
     letter-spacing: 1px;
 }
 
 .card-trend.positive {
-    color: #81c784; /* Softer, desaturated green trend */
+    color: #81c784; 
     font-size: 0.85rem;
     margin-top: 12px;
     font-weight: bold;
@@ -184,8 +194,15 @@ body {
     font-size: 1.2rem;
     margin-top: 0;
     margin-bottom: 20px;
-    color: var(--text-accent); /* Widget titles in Gold */
+    color: var(--text-accent); 
     letter-spacing: 1px;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
 }
 
 /* LEFT COLUMN WIDGETS */
@@ -200,9 +217,10 @@ body {
     font-size: 0.9rem;
 }
 
+/* THIS FIXES THE FLOATING TEXT BUG */
 .chart-placeholder {
-    height: 200px;
-    background-color: rgba(0,0,0,0.2); /* Darker inset */
+    height: 250px;
+    background-color: rgba(0,0,0,0.2); 
     border: 1px dashed rgba(255,255,255,0.1);
     display: flex;
     align-items: center;
@@ -210,6 +228,49 @@ body {
     color: var(--text-muted);
     margin-bottom: 10px;
     border-radius: 8px;
+    position: relative; /* Crucial for keeping numbers inside the box */
+}
+
+.chart-axes {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    padding: 15px;
+    pointer-events: none;
+}
+
+.y-axis {
+    position: absolute;
+    left: 15px;
+    top: 20px;
+    bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.x-axis {
+    position: absolute;
+    bottom: 15px;
+    left: 70px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.chart-legend {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    gap: 8px;
+}
+
+.revenue-dot {
+    background-color: #81c784;
 }
 
 .bottom-widgets-row {
@@ -241,9 +302,8 @@ body {
     font-weight: bold;
 }
 
-/* Desaturated Status Colors */
-.status-badge.active { background-color: #2e7d32; color: white; }
-.status-badge.break { background-color: #fbc02d; color: #181818; }
+.status-badge.active { background-color: #406e40; color: #96e096; }
+.status-badge.break { background-color: #7a5a2a; color: #fbc02d; }
 
 /* RIGHT COLUMN WIDGETS */
 .right-column {
@@ -254,7 +314,7 @@ body {
 
 /* Standardized Moody Queue Indicators */
 .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; }
-.yellow-dot { background-color: var(--text-accent); } /* Reuse Gold */
+.yellow-dot { background-color: var(--text-accent); } 
 .blue-dot { background-color: #1976d2; }
 .green-dot { background-color: #81c784; }
 
@@ -269,13 +329,12 @@ body {
     font-size: 0.8rem;
     font-weight: bold;
 }
-/* Softer badges */
-.count-badge.green { background-color: #2e7d32; }
+.count-badge.green { background-color: #406e40; color: #96e096; }
 .count-badge.blue { background-color: #1565c0; }
 
 /* FEEDBACK WIDGET (Darker Inset) */
 .feedback-card {
-    background-color: rgba(0,0,0,0.2); /* Inset Dark */
+    background-color: rgba(0,0,0,0.2); 
     padding: 15px;
     border-radius: 8px;
     margin-bottom: 10px;
@@ -284,7 +343,7 @@ body {
 
 .feedback-card .stars {
     font-size: 0.8rem;
-    color: var(--text-accent); /* Gold Stars */
+    color: var(--text-accent); 
     display: flex;
     justify-content: space-between;
     margin-bottom: 8px;
@@ -299,9 +358,9 @@ body {
     line-height: 1.4;
 }
 
-/* SMART INSIGHT WIDGET (Removed light block) */
+/* SMART INSIGHT WIDGET */
 .insights-widget {
-    background-color: var(--widget-dark) !important; /* Back to normal grey */
+    background-color: var(--widget-dark); 
 }
 
 .insight-row {
@@ -313,6 +372,6 @@ body {
 }
 
 .insight-row strong {
-    color: var(--text-accent); /* Accentuate predictive data in gold */
+    color: var(--text-accent); 
     font-size: 1.1rem;
 }

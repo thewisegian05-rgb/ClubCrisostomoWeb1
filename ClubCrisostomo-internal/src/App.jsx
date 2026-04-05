@@ -1,5 +1,9 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext.jsx";
+
+// Your Bouncer
+import ProtectedRoute from "./staff/components/ProtectedRoute.jsx"; 
 
 // --- LOGIN IMPORTS ---
 import Login from "./login/login.jsx";
@@ -22,31 +26,37 @@ import StaffSettings from "./staff/settingsstaff/staffsettings.jsx";
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Default route goes to Login */}
-        <Route path="/" element={<Login />} />
-        
-        {/* Admin Protected Routes */}
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/inventory" element={<Inventory />} /> 
-        <Route path="/admin/menu" element={<Menu />} /> 
-        <Route path="/admin/staffs-management" element={<StaffManagement />} /> 
-        <Route path="/admin/reports" element={<Reports />} /> 
-        <Route path="/admin/settingsadmin" element={<SettingsAdmin />} /> 
-        
-        {/* Staff Protected Routes */}
-        <Route path="/staff/dashboard" element={<StaffDashboard />} />
-        <Route path="/staff/pos" element={<StaffPOS />} />
-        <Route path="/staff/attendance" element={<StaffAttendance />} /> 
-        <Route path="/staff/inventory" element={<StaffInventory />} />
-        <Route path="/staff/transactions" element={<StaffTransactions />} />
-        <Route path="/staff/settings" element={<StaffSettings />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Route */}
+          <Route path="/" element={<Login />} />
+          
+          {/* 🔒 ADMIN PROTECTED ROUTES */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/inventory" element={<Inventory />} /> 
+            <Route path="/admin/menu" element={<Menu />} /> 
+            <Route path="/admin/staffs-management" element={<StaffManagement />} /> 
+            <Route path="/admin/reports" element={<Reports />} /> 
+            <Route path="/admin/settingsadmin" element={<SettingsAdmin />} /> 
+          </Route>
 
-        {/* Catch-all: If someone types a weird URL, send them back to login */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </BrowserRouter>
+          {/* 🔒 STAFF PROTECTED ROUTES */}
+          <Route element={<ProtectedRoute allowedRoles={['staff']} />}>
+            <Route path="/staff/dashboard" element={<StaffDashboard />} />
+            <Route path="/staff/pos" element={<StaffPOS />} />
+            <Route path="/staff/attendance" element={<StaffAttendance />} /> 
+            <Route path="/staff/inventory" element={<StaffInventory />} />
+            <Route path="/staff/transactions" element={<StaffTransactions />} />
+            <Route path="/staff/settings" element={<StaffSettings />} />
+          </Route>
+
+          {/* Catch-all: If someone types a weird URL, send them back to login */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 };
 
