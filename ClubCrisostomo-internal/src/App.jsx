@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
 
@@ -25,6 +25,14 @@ import StaffTransactions from "./staff/transactions/stafftransactions.jsx";
 import StaffSettings from "./staff/settingsstaff/staffsettings.jsx"; 
 
 const App = () => {
+  
+  // --- THEME LOADER ---
+  // Checks the saved theme on load and applies it to the whole website instantly
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('clubC_admin_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
   return (
     <AuthProvider>
       <BrowserRouter>

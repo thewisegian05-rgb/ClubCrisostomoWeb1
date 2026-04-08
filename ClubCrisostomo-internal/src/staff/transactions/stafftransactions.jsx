@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/sidebar.jsx';
 import './stafftransactions.css';
+import { db } from '../../firebase'; // <-- Fixed import path
+import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 
 const StaffTransactions = () => {
     const [transactions, setTransactions] = useState([]);
@@ -10,32 +12,41 @@ const StaffTransactions = () => {
     // --- SHIFT REPORT STATE ---
     const [showShiftReport, setShowShiftReport] = useState(false);
 
+    // Fetch data from Firebase in real-time
     useEffect(() => {
-        const savedTxns = localStorage.getItem('clubC_transactions');
-        if (savedTxns) setTransactions(JSON.parse(savedTxns));
+        const txnsCollectionRef = collection(db, 'transactions'); // Make sure your Firestore collection is named 'transactions'
         
-        const handleStorageChange = () => {
-            const updated = localStorage.getItem('clubC_transactions');
-            if (updated) setTransactions(JSON.parse(updated));
-        };
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
+        // onSnapshot listens for real-time changes in the database
+        const unsubscribe = onSnapshot(txnsCollectionRef, (snapshot) => {
+            const txnsData = snapshot.docs.map(doc => ({
+                id: doc.id, // Using the Firebase document ID
+                ...doc.data()
+            }));
+            setTransactions(txnsData);
+        }, (error) => {
+            console.error("Error fetching transactions: ", error);
+        });
+
+        // Cleanup listener on component unmount
+        return () => unsubscribe();
     }, []);
 
-    const updateTransactionsList = (newList) => {
-        setTransactions(newList);
-        localStorage.setItem('clubC_transactions', JSON.stringify(newList));
+    // Update status directly in Firebase
+    const changeStatus = async (e, id, newStatus) => {
+        e.stopPropagation();
+        try {
+            const txnDocRef = doc(db, 'transactions', id);
+            await updateDoc(txnDocRef, { status: newStatus });
+            // Note: We don't need to manually update state here because onSnapshot will automatically detect the change and update the UI.
+        } catch (error) {
+            console.error("Error updating status: ", error);
+            alert("Failed to update status. Please try again.");
+        }
     };
 
     const handleViewReceipt = (txn) => {
         setSelectedTxn(txn);
         setActiveModal("receipt");
-    };
-
-    const changeStatus = (e, id, newStatus) => {
-        e.stopPropagation();
-        const updatedList = transactions.map(txn => txn.id === id ? { ...txn, status: newStatus } : txn);
-        updateTransactionsList(updatedList);
     };
 
     // Filter Queues
@@ -46,19 +57,18 @@ const StaffTransactions = () => {
     // --- END OF SHIFT TALLY CALCULATIONS ---
     const completedTxns = historyTxns.filter(t => t.status === 'Completed');
     const voidedTxns = historyTxns.filter(t => t.status === 'Voided');
-    const payoutTxns = historyTxns.filter(t => t.status === 'Payout'); // Grab the payouts!
+    const payoutTxns = historyTxns.filter(t => t.status === 'Payout');
 
     const parseCurrency = (str) => {
         if (!str) return 0;
-        return parseFloat(str.replace(/[^\d.-]/g, ''));
+        return parseFloat(String(str).replace(/[^\d.-]/g, ''));
     };
 
     const completedRevenue = completedTxns.reduce((sum, t) => sum + parseCurrency(t.total), 0);
     const voidedRevenue = voidedTxns.reduce((sum, t) => sum + parseCurrency(t.total), 0);
-    // Use Math.abs because we saved payouts as negative strings (e.g., "-₱150")
     const totalPayouts = payoutTxns.reduce((sum, t) => sum + Math.abs(parseCurrency(t.total)), 0); 
     
-    // The magic math! Gross sales minus cash taken out = what should be in the register.
+    // Gross sales minus cash taken out = what should be in the register.
     const expectedCashInDrawer = completedRevenue - totalPayouts;
 
     const dineInRevenue = completedTxns.filter(t => t.orderType !== 'Takeout').reduce((sum, t) => sum + parseCurrency(t.total), 0);
@@ -198,7 +208,7 @@ const StaffTransactions = () => {
                         </div>
                         
                         <div className="receipt-items">
-                            <p>{selectedTxn.items.split(' | ').map((item, i) => <span key={i} style={{display: "block", marginBottom: "5px"}}>{item}</span>)}</p>
+                            <p>{selectedTxn.items?.split(' | ').map((item, i) => <span key={i} style={{display: "block", marginBottom: "5px"}}>{item}</span>)}</p>
                         </div>
                         
                         <div className="receipt-total">
@@ -226,7 +236,7 @@ const StaffTransactions = () => {
 
                         <div className="report-body">
                             
-                            {/* Expected Cash in Drawer - THE MOST IMPORTANT METRIC */}
+                            {/* Expected Cash in Drawer */}
                             <div className="report-section summary-box" style={{backgroundColor: "rgba(200, 162, 124, 0.1)", borderColor: "var(--text-accent)"}}>
                                 <h3 style={{ color: "var(--text-accent)", marginBottom: "10px" }}>Expected Cash In Drawer</h3>
                                 <div className="report-huge-total" style={{color: "var(--text-accent)"}}>₱{expectedCashInDrawer.toFixed(2)}</div>

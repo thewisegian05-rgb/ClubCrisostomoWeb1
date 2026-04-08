@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/sidebar.jsx';
 import './staffinventory.css';
+import { db } from '../../firebase'; // Firebase connection
+import { collection, onSnapshot, doc, updateDoc, addDoc, query, orderBy, limit } from 'firebase/firestore';
 
 const StaffInventory = () => {
-    const [inventory, setInventory] = useState(() => {
-        const savedInventory = localStorage.getItem("clubC_inventory");
-        return savedInventory ? JSON.parse(savedInventory) : []; 
-    });
-
-    const [logs, setLogs] = useState(() => {
-        const savedLogs = localStorage.getItem("clubC_inventory_logs");
-        return savedLogs ? JSON.parse(savedLogs) : [];
-    });
+    // --- 1. CLOUD STATE (Replaced localStorage) ---
+    const [inventory, setInventory] = useState([]);
+    const [logs, setLogs] = useState([]);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [activeCategory, setActiveCategory] = useState('All');
@@ -29,13 +25,28 @@ const StaffInventory = () => {
     const [receiveAmount, setReceiveAmount] = useState(''); 
     const [receiveBaseline, setReceiveBaseline] = useState(''); 
 
+    // --- 2. FETCH DATA FROM FIREBASE IN REAL-TIME ---
     useEffect(() => {
-        localStorage.setItem("clubC_inventory", JSON.stringify(inventory));
-    }, [inventory]);
+        // Sync Inventory
+        const invCollection = collection(db, 'inventory');
+        const unsubscribeInv = onSnapshot(invCollection, (snapshot) => {
+            const invData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+            setInventory(invData);
+        });
 
-    useEffect(() => {
-        localStorage.setItem("clubC_inventory_logs", JSON.stringify(logs));
-    }, [logs]);
+        // Sync Logs (Creating a new collection in your database just for logs)
+        const logsCollection = collection(db, 'inventoryLogs');
+        const logsQuery = query(logsCollection, orderBy('timestamp', 'desc'), limit(50));
+        const unsubscribeLogs = onSnapshot(logsQuery, (snapshot) => {
+            const logsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+            setLogs(logsData);
+        });
+
+        return () => {
+            unsubscribeInv();
+            unsubscribeLogs();
+        };
+    }, []);
 
     // --- SMART REASON TOGGLER ---
     useEffect(() => {
@@ -57,63 +68,83 @@ const StaffInventory = () => {
         }
     }, [updateAmount, updateLocation, isUpdateModalOpen, selectedItem]);
 
-    const createLog = (itemName, category, qtyChange, actionType, details) => {
-        const newLog = {
-            id: Date.now() + Math.random(),
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            date: new Date().toLocaleDateString([], { month: 'short', day: 'numeric' }),
-            itemName,
-            category,
-            qtyChange,
-            actionType,
-            details
-        };
-        setLogs(prev => [newLog, ...prev].slice(0, 50)); 
+    // Save Logs to Firebase instead of LocalStorage
+    const createLog = async (itemName, category, qtyChange, actionType, details) => {
+        try {
+            await addDoc(collection(db, 'inventoryLogs'), {
+                timestamp: Date.now(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                date: new Date().toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                itemName,
+                category,
+                qtyChange,
+                actionType,
+                details
+            });
+        } catch (error) {
+            console.error("Error creating log:", error);
+        }
     };
 
+    // Calculate percentage and status so the Admin sees the correct color tags
     const recalculateStatus = (qty, baseline) => {
         const currentQty = parseFloat(qty) || 0;
         const base = parseFloat(baseline) || 1;
         const percentage = Math.min(100, Math.max(0, (currentQty / base) * 100));
         
-        if (percentage <= 20) return { percentage, status: "Critical", colorClass: "status-red" };
-        if (percentage <= 50) return { percentage, status: "Low stock", colorClass: "status-yellow" };
-        return { percentage, status: "Ample", colorClass: "status-green" };
+        let status = "Ample";
+        let colorClass = "status-green";
+
+        if (percentage <= 20) {
+            status = "Critical";
+            colorClass = "status-red";
+        } else if (percentage <= 50) {
+            status = "Low stock";
+            colorClass = "status-yellow";
+        }
+        return { stockPercentage: percentage, status, colorClass };
     };
 
-    const handleQuickAdjust = (id, location, delta) => {
-        setInventory(inventory.map(item => {
-            if (item.id === id) {
-                if (location === 'Counter') {
-                    const newQty = Math.max(0, (parseFloat(item.quantity) || 0) + delta);
-                    const actualDelta = newQty - (parseFloat(item.quantity) || 0);
-                    if (actualDelta !== 0) {
-                        createLog(item.name, item.category, actualDelta > 0 ? `+${actualDelta} qty` : `${actualDelta} qty`, actualDelta > 0 ? "Correction" : "Shift Tally", "Quick Adjust");
-                    }
+    // --- 3. CLOUD UPDATE FUNCTIONS ---
+    const handleQuickAdjust = async (id, location, delta) => {
+        const item = inventory.find(i => i.id === id);
+        if (!item) return;
+
+        try {
+            const itemRef = doc(db, 'inventory', id);
+            
+            if (location === 'Counter') {
+                const newQty = Math.max(0, (parseFloat(item.quantity) || 0) + delta);
+                const actualDelta = newQty - (parseFloat(item.quantity) || 0);
+                if (actualDelta !== 0) {
+                    createLog(item.name, item.category, actualDelta > 0 ? `+${actualDelta} qty` : `${actualDelta} qty`, actualDelta > 0 ? "Correction" : "Shift Tally", "Quick Adjust");
                     const calcs = recalculateStatus(newQty, item.baseline);
-                    return { ...item, quantity: newQty, ...calcs };
-                } else {
-                    const newBackStock = Math.max(0, (parseFloat(item.backStock) || 0) + delta);
-                    const actualDelta = newBackStock - (parseFloat(item.backStock) || 0);
-                    if (actualDelta !== 0) {
-                        createLog(item.name, item.category, actualDelta > 0 ? `+${actualDelta} pkgs` : `${actualDelta} pkgs`, actualDelta > 0 ? "Correction" : "Shift Tally", "Quick Adjust");
-                    }
-                    return { ...item, backStock: newBackStock };
+                    await updateDoc(itemRef, { quantity: newQty, ...calcs });
+                }
+            } else {
+                const newBackStock = Math.max(0, (parseFloat(item.backStock) || 0) + delta);
+                const actualDelta = newBackStock - (parseFloat(item.backStock) || 0);
+                if (actualDelta !== 0) {
+                    createLog(item.name, item.category, actualDelta > 0 ? `+${actualDelta} pkgs` : `${actualDelta} pkgs`, actualDelta > 0 ? "Correction" : "Shift Tally", "Quick Adjust");
+                    await updateDoc(itemRef, { backStock: newBackStock });
                 }
             }
-            return item;
-        }));
+        } catch (error) {
+            console.error("Error updating quick adjust:", error);
+        }
     };
 
-    const handleMarkOut = (id) => {
-        setInventory(inventory.map(item => {
-            if (item.id === id) {
-                createLog(item.name, item.category, `-${item.quantity} qty`, "Marked 86 Empty", "Counter cleared");
-                const calcs = recalculateStatus(0, item.baseline);
-                return { ...item, quantity: 0, ...calcs };
-            }
-            return item;
-        }));
+    const handleMarkOut = async (id) => {
+        const item = inventory.find(i => i.id === id);
+        if (!item) return;
+
+        try {
+            createLog(item.name, item.category, `-${item.quantity} qty`, "Marked 86 Empty", "Counter cleared");
+            const calcs = recalculateStatus(0, item.baseline);
+            await updateDoc(doc(db, 'inventory', id), { quantity: 0, ...calcs });
+        } catch (error) {
+            console.error("Error marking out:", error);
+        }
     };
 
     const openReceiveModal = (item) => {
@@ -123,26 +154,29 @@ const StaffInventory = () => {
         setIsReceiveModalOpen(true);
     };
 
-    const submitReceive = () => {
+    const submitReceive = async () => {
         const pkgs = parseInt(receiveAmount);
         const newBaseline = parseFloat(receiveBaseline);
         if (!pkgs || pkgs <= 0) return alert("Please enter valid packages received.");
         if (!newBaseline || newBaseline <= 0) return alert("Please enter valid quantity per package.");
 
-        setInventory(inventory.map(item => {
-            if (item.id === selectedItem.id) {
-                const oldBaseline = parseFloat(item.baseline) || 1;
-                const oldBackStockPkgs = parseFloat(item.backStock) || 0;
-                const oldRawTotal = oldBackStockPkgs * oldBaseline;
-                const newlyArrivedRaw = pkgs * newBaseline;
-                const totalRawNow = oldRawTotal + newlyArrivedRaw;
-                const updatedBackStockPkgs = totalRawNow / newBaseline;
-                createLog(item.name, item.category, `+${pkgs} pkgs`, "Delivery", `Baseline updated to ${newBaseline}`);
-                return { ...item, backStock: updatedBackStockPkgs, baseline: newBaseline };
-            }
-            return item;
-        }));
-        setIsReceiveModalOpen(false);
+        const item = inventory.find(i => i.id === selectedItem.id);
+        if (!item) return;
+
+        try {
+            const oldBaseline = parseFloat(item.baseline) || 1;
+            const oldBackStockPkgs = parseFloat(item.backStock) || 0;
+            const oldRawTotal = oldBackStockPkgs * oldBaseline;
+            const newlyArrivedRaw = pkgs * newBaseline;
+            const totalRawNow = oldRawTotal + newlyArrivedRaw;
+            const updatedBackStockPkgs = totalRawNow / newBaseline;
+            
+            createLog(item.name, item.category, `+${pkgs} pkgs`, "Delivery", `Baseline updated to ${newBaseline}`);
+            await updateDoc(doc(db, 'inventory', item.id), { backStock: updatedBackStockPkgs, baseline: newBaseline });
+            setIsReceiveModalOpen(false);
+        } catch (error) {
+            console.error("Error receiving delivery:", error);
+        }
     };
 
     const openRestockModal = (item) => {
@@ -150,21 +184,27 @@ const StaffInventory = () => {
         setIsRestockModalOpen(true);
     };
 
-    const confirmRestock = () => {
+    const confirmRestock = async () => {
         if (!selectedItem || selectedItem.backStock <= 0) return;
+        const item = inventory.find(i => i.id === selectedItem.id);
+        if (!item) return;
 
-        setInventory(inventory.map(item => {
-            if (item.id === selectedItem.id) {
-                const pkgsToMove = Math.min(1, item.backStock);
-                const rawUnitsToMove = pkgsToMove * item.baseline;
-                const newQty = (parseFloat(item.quantity) || 0) + rawUnitsToMove;
-                const calcs = recalculateStatus(newQty, item.baseline);
-                createLog(item.name, item.category, `+${rawUnitsToMove} qty / -${pkgsToMove} pkgs`, "Refill", "Moved to Counter");
-                return { ...item, quantity: newQty, backStock: item.backStock - pkgsToMove, ...calcs };
-            }
-            return item;
-        }));
-        setIsRestockModalOpen(false);
+        try {
+            const pkgsToMove = Math.min(1, item.backStock);
+            const rawUnitsToMove = pkgsToMove * item.baseline;
+            const newQty = (parseFloat(item.quantity) || 0) + rawUnitsToMove;
+            const calcs = recalculateStatus(newQty, item.baseline);
+            
+            createLog(item.name, item.category, `+${rawUnitsToMove} qty / -${pkgsToMove} pkgs`, "Refill", "Moved to Counter");
+            await updateDoc(doc(db, 'inventory', item.id), { 
+                quantity: newQty, 
+                backStock: item.backStock - pkgsToMove, 
+                ...calcs 
+            });
+            setIsRestockModalOpen(false);
+        } catch (error) {
+            console.error("Error confirming restock:", error);
+        }
     };
 
     const openUpdateModal = (item) => {
@@ -174,30 +214,31 @@ const StaffInventory = () => {
         setIsUpdateModalOpen(true);
     };
 
-    const submitUpdateLog = () => {
+    const submitUpdateLog = async () => {
         const newAmount = parseFloat(updateAmount);
         if (isNaN(newAmount) || newAmount < 0) return alert(`Please enter a valid number.`);
+        const item = inventory.find(i => i.id === selectedItem.id);
+        if (!item) return;
 
-        setInventory(inventory.map(item => {
-            if (item.id === selectedItem.id) {
-                const currentQty = updateLocation === 'Counter' ? (parseFloat(item.quantity) || 0) : (parseFloat(item.backStock) || 0);
-                const difference = newAmount - currentQty;
-                
-                if (difference !== 0) {
-                    const diffText = difference > 0 ? `+${difference} ${updateLocation === 'Counter' ? 'qty' : 'pkgs'}` : `${difference} ${updateLocation === 'Counter' ? 'qty' : 'pkgs'}`;
-                    createLog(item.name, item.category, diffText, updateReason, `${updateLocation} Audit`);
-                }
-
-                if (updateLocation === 'Counter') {
-                    const calcs = recalculateStatus(newAmount, item.baseline);
-                    return { ...item, quantity: newAmount, ...calcs };
-                } else {
-                    return { ...item, backStock: newAmount };
-                }
+        try {
+            const currentQty = updateLocation === 'Counter' ? (parseFloat(item.quantity) || 0) : (parseFloat(item.backStock) || 0);
+            const difference = newAmount - currentQty;
+            
+            if (difference !== 0) {
+                const diffText = difference > 0 ? `+${difference} ${updateLocation === 'Counter' ? 'qty' : 'pkgs'}` : `${difference} ${updateLocation === 'Counter' ? 'qty' : 'pkgs'}`;
+                createLog(item.name, item.category, diffText, updateReason, `${updateLocation} Audit`);
             }
-            return item;
-        }));
-        setIsUpdateModalOpen(false);
+
+            if (updateLocation === 'Counter') {
+                const calcs = recalculateStatus(newAmount, item.baseline);
+                await updateDoc(doc(db, 'inventory', item.id), { quantity: newAmount, ...calcs });
+            } else {
+                await updateDoc(doc(db, 'inventory', item.id), { backStock: newAmount });
+            }
+            setIsUpdateModalOpen(false);
+        } catch (error) {
+            console.error("Error submitting update:", error);
+        }
     };
 
     const categories = ['All', 'Coffee', 'Dairy', 'Syrups', 'Other'];
@@ -280,7 +321,6 @@ const StaffInventory = () => {
                                     else { status = "Ample"; colorClass = "status-green"; }
                                 }
 
-                                // LOGIC FIX: 86 is only allowed if Backroom is empty
                                 const is86Allowed = backQty === 0;
 
                                 return (
@@ -354,7 +394,7 @@ const StaffInventory = () => {
                                         <div style={{color: "var(--text-main)", fontWeight: "bold", fontSize: "0.95rem"}}>{log.itemName}</div>
                                         <div style={{color: "var(--text-muted)", fontSize: "0.8rem"}}>{log.category}</div>
                                     </div>
-                                    <div style={{flex: 1.5, fontWeight: "bold", fontSize: "1.05rem", color: log.qtyChange.includes('-') ? "#ef5350" : "#81c784"}}>{log.qtyChange}</div>
+                                    <div style={{flex: 1.5, fontWeight: "bold", fontSize: "1.05rem", color: String(log.qtyChange).includes('-') ? "#ef5350" : "#81c784"}}>{log.qtyChange}</div>
                                     <div style={{flex: 2}}>
                                         <div style={{color: "var(--text-accent)", fontSize: "0.9rem", fontWeight: "bold"}}>{log.actionType}</div>
                                         <div style={{color: "var(--text-muted)", fontSize: "0.8rem"}}>{log.details}</div>

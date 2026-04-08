@@ -1,39 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { db } from '../../firebase.js'; 
+import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 import './settingsadmin.css';
 
 const SettingsAdmin = () => {
     const navigate = useNavigate();
     
-    // --- STATE MANAGEMENT ---
-    const [email, setEmail] = useState(() => localStorage.getItem('clubC_admin_email') || 'Admin@gmail.com');
-    const [phone, setPhone] = useState(() => localStorage.getItem('clubC_admin_phone') || '+63 919 698 1234');
+    // --- REAL-TIME DATA STATES ---
+    const [email, setEmail] = useState('Admin@clubc.com');
+    const [phone, setPhone] = useState('+63 919 698 1234');
+    const [theme, setTheme] = useState(localStorage.getItem('clubC_admin_theme') || 'dark');
+    const [mlEnabled, setMlEnabled] = useState(true);
     
-    const [theme, setTheme] = useState(() => localStorage.getItem('clubC_admin_theme') || 'dark');
-    const [mlEnabled, setMlEnabled] = useState(() => {
-        const saved = localStorage.getItem('clubC_admin_ml');
-        return saved !== null ? JSON.parse(saved) : true;
-    });
+    // Added a state to track the actual password from the database
+    const [currentDbPassword, setCurrentDbPassword] = useState('admin123');
 
-    // --- MODAL STATE ---
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const docRef = doc(db, 'settings', 'adminPrefs');
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.email) setEmail(data.email);
+                    if (data.phone) setPhone(data.phone);
+                    if (data.mlEnabled !== undefined) setMlEnabled(data.mlEnabled);
+                    if (data.password) setCurrentDbPassword(data.password);
+                } else {
+                    // Create the document with defaults if it doesn't exist yet
+                    await setDoc(docRef, {
+                        email: 'Admin@clubc.com',
+                        phone: '+63 919 698 1234',
+                        mlEnabled: true,
+                        password: 'admin' 
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching settings:", error);
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem('clubC_admin_theme', theme);
+        document.documentElement.setAttribute('data-theme', theme);
+    }, [theme]);
+
+    const handleToggleML = async () => {
+        const newState = !mlEnabled;
+        setMlEnabled(newState);
+        await setDoc(doc(db, 'settings', 'adminPrefs'), { mlEnabled: newState }, { merge: true });
+    };
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState(''); 
     const [inputValue, setInputValue] = useState('');
     const [passwordData, setPasswordData] = useState({ current: '', new: '', confirm: '' });
 
-    useEffect(() => {
-        localStorage.setItem('clubC_admin_theme', theme);
-        // This applies the theme to the entire website body
-        document.documentElement.setAttribute('data-theme', theme);
-    }, [theme]);
-
-    useEffect(() => {
-        localStorage.setItem('clubC_admin_ml', JSON.stringify(mlEnabled));
-    }, [mlEnabled]);
-
-    const handleNavigation = (path) => {
-        navigate(path);
-    };
+    const handleNavigation = (path) => navigate(path);
 
     const openModal = (type) => {
         setModalType(type);
@@ -45,56 +72,55 @@ const SettingsAdmin = () => {
         setIsModalOpen(true);
     };
 
-    const handleSaveModal = () => {
-        if (modalType === 'email') {
-            setEmail(inputValue);
-            localStorage.setItem('clubC_admin_email', inputValue);
-            alert(`Email updated! You must now use ${inputValue} to log in.`);
-        } 
-        else if (modalType === 'phone') {
-            setPhone(inputValue);
-            localStorage.setItem('clubC_admin_phone', inputValue);
-        } 
-        else if (modalType === 'password') {
-            // --- SECURITY CHECK: Get the actual current password ---
-            const savedPass = localStorage.getItem('clubC_admin_password') || "1234";
+    const handleSaveModal = async () => {
+        try {
+            const docRef = doc(db, 'settings', 'adminPrefs');
 
-            if (!passwordData.current || !passwordData.new || !passwordData.confirm) {
-                alert("Please fill out all password fields.");
-                return;
+            if (modalType === 'email') {
+                setEmail(inputValue);
+                await setDoc(docRef, { email: inputValue }, { merge: true });
+                alert(`Notice: Admin email changed to ${inputValue}`);
+            } 
+            else if (modalType === 'phone') {
+                setPhone(inputValue);
+                await setDoc(docRef, { phone: inputValue }, { merge: true });
+                alert(`Notice: Admin phone changed to ${inputValue}`);
+            } 
+            else if (modalType === 'password') {
+                if (!passwordData.current || !passwordData.new || !passwordData.confirm) {
+                    return alert("Please fill out all password fields.");
+                }
+                if (passwordData.current !== currentDbPassword) {
+                    return alert("Incorrect current password!");
+                }
+                if (passwordData.new !== passwordData.confirm) {
+                    return alert("New passwords do not match!");
+                }
+                
+                // Save the new password to Firebase and update local state
+                await setDoc(docRef, { password: passwordData.new }, { merge: true });
+                setCurrentDbPassword(passwordData.new);
+                alert("Password successfully updated! Use this to log in next time.");
             }
-            // --- SECURITY CHECK: Does it match? ---
-            if (passwordData.current !== savedPass) {
-                alert("Incorrect current password! Please try again.");
-                return;
-            }
-            if (passwordData.new !== passwordData.confirm) {
-                alert("New passwords do not match!");
-                return;
-            }
-            
-            localStorage.setItem('clubC_admin_password', passwordData.new);
-            alert("Password successfully updated! Use this to log in next time.");
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error("Error saving:", error);
+            alert("Failed to save settings.");
         }
-        setIsModalOpen(false);
     };
 
     const handleDeviceLogout = () => {
         if (window.confirm("Are you sure you want to log out of Chrome on Windows?")) {
-            alert("Device successfully unlinked.");
-            setIsModalOpen(false);
+            alert("Device successfully unlinked. You will be logged out.");
+            navigate('/');
         }
     };
 
-    const handleContactUs = () => {
-        window.location.href = "mailto:support@clubc.com?subject=Admin Support Request";
-    };
-
     return (
-        <div className="dashboard-container settings-wrapper">
+        <div className="dashboard-container">
             <aside className="sidebar">
                 <div className="sidebar-header">
-                    <h2>CLUB C.</h2>
+                    <h2 style={{ color: 'var(--text-accent)', margin: '20px 0', fontSize: '24px', letterSpacing: '1px' }}>CLUB C.</h2>
                 </div>
                 <nav className="sidebar-nav">
                     <ul>
@@ -110,11 +136,16 @@ const SettingsAdmin = () => {
             </aside>
 
             <main className="main-content">
-                <header className="settings-header">
-                    <h1>Settings</h1>
-                    <div className="user-info">
-                        <span className="bell-icon" style={{cursor: 'pointer'}} onClick={() => alert("No new notifications")}>🔔</span>
-                        <span className="user-name">Admin 👤</span>
+                <header className="page-header">
+                    <div className="header-titles">
+                        <h1>Settings</h1>
+                        <p>Manage your account, preferences, and interface.</p>
+                    </div>
+                    <div className="header-actions">
+                        <div className="user-info">
+                            <span className="bell-icon" style={{cursor: 'pointer'}} onClick={() => alert("No new notifications")}>🔔</span>
+                            <span className="user-name">Admin 👤</span>
+                        </div>
                     </div>
                 </header>
 
@@ -122,7 +153,7 @@ const SettingsAdmin = () => {
 
                 <div className="settings-grid">
                     <div className="settings-left-col">
-                        <div className="settings-card flex-row">
+                        <div className="widget flex-row">
                             <div className="settings-info">
                                 <h3>Email Address</h3>
                                 <p>{email}</p>
@@ -130,7 +161,7 @@ const SettingsAdmin = () => {
                             <button className="settings-btn" onClick={() => openModal('email')}>Update</button>
                         </div>
 
-                        <div className="settings-card flex-row">
+                        <div className="widget flex-row">
                             <div className="settings-info">
                                 <h3>Phone Number</h3>
                                 <p>{phone}</p>
@@ -138,7 +169,7 @@ const SettingsAdmin = () => {
                             <button className="settings-btn" onClick={() => openModal('phone')}>Update</button>
                         </div>
 
-                        <div className="settings-card flex-row">
+                        <div className="widget flex-row">
                             <div className="settings-info">
                                 <h3>Password</h3>
                                 <p>**********</p>
@@ -146,15 +177,15 @@ const SettingsAdmin = () => {
                             <button className="settings-btn" onClick={() => openModal('password')}>Change</button>
                         </div>
 
-                        <div className="settings-card center-content">
+                        <div className="widget center-content">
                             <h3>Contact Support</h3>
-                            <p>Need more help? Send us a message for support</p>
-                            <button className="settings-btn outline-btn mt-15" onClick={handleContactUs}>Contact Us</button>
+                            <p style={{marginBottom: '15px'}}>Need more help? Send us a message for support</p>
+                            <button className="settings-btn outline-btn" onClick={() => window.location.href = "mailto:support@clubc.com"}>Contact Us</button>
                         </div>
                     </div>
 
                     <div className="settings-right-col">
-                        <div className="settings-card">
+                        <div className="widget">
                             <h3>User Interface</h3>
                             <p className="sub-label">Appearance</p>
                             
@@ -184,14 +215,14 @@ const SettingsAdmin = () => {
                             </div>
                         </div>
 
-                        <div className="settings-card">
+                        <div className="widget">
                             <h3>Preferences</h3>
                             <div className="toggle-row mt-15">
                                 <label className="toggle-switch">
                                     <input 
                                         type="checkbox" 
                                         checked={mlEnabled} 
-                                        onChange={() => setMlEnabled(!mlEnabled)} 
+                                        onChange={handleToggleML} 
                                     />
                                     <span className="slider round"></span>
                                 </label>
@@ -202,7 +233,7 @@ const SettingsAdmin = () => {
                             </div>
                         </div>
 
-                        <div className="settings-card">
+                        <div className="widget">
                             <h3>Logged Device</h3>
                             <div className="device-info mt-15">
                                 <p>Last Active: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
@@ -216,8 +247,8 @@ const SettingsAdmin = () => {
             </main>
 
             {isModalOpen && (
-                <div className="settings-modal-overlay">
-                    <div className="settings-custom-modal">
+                <div className="modal-overlay">
+                    <div className="custom-modal">
                         <h2>
                             {modalType === 'email' && "Update Email Address"}
                             {modalType === 'phone' && "Update Phone Number"}
@@ -226,7 +257,7 @@ const SettingsAdmin = () => {
                         </h2>
                         
                         {(modalType === 'email' || modalType === 'phone') && (
-                            <div className="settings-form-group">
+                            <div className="form-group">
                                 <label>New {modalType === 'email' ? 'Email' : 'Phone Number'}</label>
                                 <input 
                                     type={modalType === 'email' ? 'email' : 'text'}
@@ -240,7 +271,7 @@ const SettingsAdmin = () => {
 
                         {modalType === 'password' && (
                             <>
-                                <div className="settings-form-group">
+                                <div className="form-group">
                                     <label>Current Password</label>
                                     <input 
                                         type="password" 
@@ -249,7 +280,7 @@ const SettingsAdmin = () => {
                                         placeholder="Enter current password"
                                     />
                                 </div>
-                                <div className="settings-form-group">
+                                <div className="form-group">
                                     <label>New Password</label>
                                     <input 
                                         type="password" 
@@ -258,7 +289,7 @@ const SettingsAdmin = () => {
                                         placeholder="Enter new password"
                                     />
                                 </div>
-                                <div className="settings-form-group">
+                                <div className="form-group">
                                     <label>Confirm New Password</label>
                                     <input 
                                         type="password" 
@@ -284,10 +315,10 @@ const SettingsAdmin = () => {
                             </div>
                         )}
 
-                        <div className="settings-modal-actions">
-                            <button className="settings-cancel-btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                        <div className="modal-actions">
+                            <button className="cancel-btn" onClick={() => setIsModalOpen(false)}>Cancel</button>
                             {modalType !== 'device' && (
-                                <button className="settings-save-btn" onClick={handleSaveModal}>Save Changes</button>
+                                <button className="save-btn" onClick={handleSaveModal}>Save Changes</button>
                             )}
                         </div>
                     </div>

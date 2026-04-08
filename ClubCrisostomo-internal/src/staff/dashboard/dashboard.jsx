@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/sidebar.jsx";
 import "./dashboard.css"; 
+import { db } from "../../firebase"; 
+import { collection, onSnapshot } from "firebase/firestore"; 
 
 const StaffDashboard = () => {
   const navigate = useNavigate();
@@ -38,19 +40,38 @@ const StaffDashboard = () => {
   };
 
   useEffect(() => {
-      const loadData = () => {
-          // 1. Process Transactions
-          const savedTxns = localStorage.getItem('clubC_transactions');
-          if (savedTxns) {
-              const parsedTxns = JSON.parse(savedTxns);
-              const pending = parsedTxns.filter(t => t.status === 'Pending');
-              const preparing = parsedTxns.filter(t => t.status === 'Preparing');
-              setPendingCount(pending.length);
-              setPreparingCount(preparing.length);
-              setActiveOrdersList([...pending, ...preparing]);
-          }
+      // 1. Process Transactions from Firebase (Real-time)
+      const txnsCollectionRef = collection(db, 'transactions');
+      const unsubscribeTxns = onSnapshot(txnsCollectionRef, (snapshot) => {
+          const parsedTxns = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+          }));
+          const pending = parsedTxns.filter(t => t.status === 'Pending');
+          const preparing = parsedTxns.filter(t => t.status === 'Preparing');
+          
+          setPendingCount(pending.length);
+          setPreparingCount(preparing.length);
+          setActiveOrdersList([...pending, ...preparing]);
+      }, (error) => {
+          console.error("Error fetching transactions for dashboard: ", error);
+      });
 
-          // 2. Process Inventory for Low Stock Alerts
+      // 2. Process Staff Attendance from Firebase (Real-time)
+      const staffCollectionRef = collection(db, 'staff');
+      const unsubscribeStaff = onSnapshot(staffCollectionRef, (snapshot) => {
+          const staffData = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+          }));
+          setDynamicStaffData(staffData);
+      }, (error) => {
+          console.error("Error fetching staff for dashboard: ", error);
+      });
+
+      // Function to load local data (Inventory)
+      const loadLocalData = () => {
+          // 3. Process Inventory for Low Stock Alerts (Still Local Storage)
           const savedInventory = localStorage.getItem("clubC_inventory");
           if (savedInventory) {
               const parsedInv = JSON.parse(savedInventory);
@@ -60,28 +81,17 @@ const StaffDashboard = () => {
               setLowCounterItems(counterLow);
               setLowBackroomItems(backroomLow);
           }
-
-          // 3. Process Live Staff Data
-          const savedStaff = localStorage.getItem('clubC_staffData');
-          if (savedStaff) {
-              setDynamicStaffData(JSON.parse(savedStaff));
-          } else {
-              // Fallback default array if attendance page hasn't been opened yet
-              const defaultData = [
-                { id: 'STF001', name: 'Gian', role: 'Barista', status: 'On Leave', shift: 'Mon-Wed 8AM - 5PM', initial: 'G', pin: '1111', currentAction: 'Off Shift' },
-                { id: 'STF002', name: 'Cyrus', role: 'Barista', status: 'Active', shift: 'Flexible', initial: 'C', pin: '2222', currentAction: 'Clocked In' },
-                { id: 'STF003', name: 'Kimmy', role: 'Part-time Cook', status: 'Inactive', shift: 'Mon-Fri 8AM - 5PM', initial: 'K', pin: '3333', currentAction: 'Off Shift' },
-                { id: 'STF004', name: 'Zairyl', role: 'Cashier', status: 'Active', shift: 'Sat - Sun 8AM - 5PM', initial: 'Z', pin: '4444', currentAction: 'Clocked In' },
-                { id: 'STF005', name: 'Samantha', role: 'Cook', status: 'Active', shift: 'Sat - Sun 8AM - 5PM', initial: 'S', pin: '5555', currentAction: 'Clocked In' }
-              ];
-              setDynamicStaffData(defaultData);
-              localStorage.setItem('clubC_staffData', JSON.stringify(defaultData));
-          }
       };
 
-      loadData();
-      window.addEventListener('storage', loadData);
-      return () => window.removeEventListener('storage', loadData);
+      loadLocalData();
+      window.addEventListener('storage', loadLocalData);
+      
+      // Cleanup listeners on unmount
+      return () => {
+          unsubscribeTxns(); 
+          unsubscribeStaff(); // Stop listening to staff updates when leaving page
+          window.removeEventListener('storage', loadLocalData);
+      };
   }, []);
 
   const renderStatusBadge = (status) => {
@@ -143,15 +153,17 @@ const StaffDashboard = () => {
             <>
               <h2 className="modal-title">Shift Management</h2>
               <div className="modal-list">
-                {dynamicStaffData.map((staff) => (
-                  <div key={staff.id} className="modal-list-item">
-                    <div>
-                        <strong>{staff.name}</strong> 
-                        <span className="text-muted" style={{fontSize: "0.8rem"}}> • {staff.role}</span>
+                {dynamicStaffData.length === 0 ? <div style={{textAlign: "center", color: "var(--text-muted)", padding: "20px 0"}}>No staff data found.</div> : (
+                  dynamicStaffData.map((staff) => (
+                    <div key={staff.id} className="modal-list-item">
+                      <div>
+                          <strong>{staff.name}</strong> 
+                          <span className="text-muted" style={{fontSize: "0.8rem"}}> • {staff.role}</span>
+                      </div>
+                      {renderStatusBadge(staff.status)}
                     </div>
-                    {renderStatusBadge(staff.status)}
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
               <button className="modal-action-btn" onClick={() => navigate('/staff/attendance')}>Go to Attendance</button>
             </>
@@ -234,23 +246,23 @@ const StaffDashboard = () => {
             <div className="metric-card shift-widget" onClick={() => setActiveModal("shift")}>
               <div style={{display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "15px"}}>
                   <div className="card-label-top" style={{margin: 0}}>Attendance and Status</div>
-                  {/* Removed the Clocked Out placeholder div entirely */}
               </div>
               <div style={{borderBottom: "1px solid rgba(255,255,255,0.05)", margin: "0 -20px 15px -20px"}}></div>
               <div className="preview-list">
                 
-                {/* Removed the .slice(0,3) so it maps through ALL members */}
-                {dynamicStaffData.map((staff) => (
-                  <div key={staff.id} className="preview-list-item">
-                    <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
-                        <div className="initial-placeholder">{staff.initial}</div>
-                        <div style={{fontSize: "0.85rem", color: "var(--text-main)"}}>
-                            {staff.name} <span style={{fontSize: "0.75rem", color: "var(--text-muted)"}}>({staff.role})</span>
-                        </div>
+                {dynamicStaffData.length === 0 ? <div style={{textAlign: "center", color: "var(--text-muted)", padding: "10px", fontSize: "0.9rem"}}>No staff data found.</div> : (
+                  dynamicStaffData.map((staff) => (
+                    <div key={staff.id} className="preview-list-item">
+                      <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
+                          <div className="initial-placeholder">{staff.initial || staff.name.charAt(0)}</div>
+                          <div style={{fontSize: "0.85rem", color: "var(--text-main)"}}>
+                              {staff.name} <span style={{fontSize: "0.75rem", color: "var(--text-muted)"}}>({staff.role})</span>
+                          </div>
+                      </div>
+                      {renderStatusBadge(staff.status)}
                     </div>
-                    {renderStatusBadge(staff.status)}
-                  </div>
-                ))}
+                  ))
+                )}
 
               </div>
               <div className="card-trend" style={{marginTop: "15px", textAlign: "center", color: "var(--text-muted)"}}>Click to view full list</div>

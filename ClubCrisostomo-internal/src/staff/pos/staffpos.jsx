@@ -1,31 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/sidebar.jsx';
+import { db } from '../../firebase.js'; 
+import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore'; 
 import './staffpos.css'; 
-
-// Pull menu from localStorage safely
-const getMenuData = () => {
-    try {
-        const savedMenu = localStorage.getItem("clubC_menu");
-        if (savedMenu) {
-            const parsed = JSON.parse(savedMenu);
-            if (Array.isArray(parsed)) return parsed;
-        }
-    } catch (error) {
-        console.error("Could not load menu from storage", error);
-    }
-    
-    // Fallback menu
-    return [
-        { id: 1, name: "Cinnamon Latte", category: "Coffee", price: "100" },
-        { id: 2, name: "Matcha Latte", category: "Non Coffee", price: "120" },
-        { id: 3, name: "Berry Lemonade", category: "Refreshers", price: "150" },
-        { id: 4, name: "Chocolate Chip Cookie", category: "Snacks", price: "100" },
-        { id: 5, name: "Americano", category: "Coffee", price: "100" },
-        { id: 6, name: "Cappuccino", category: "Coffee", price: "110" },
-        { id: 7, name: "Dark Chocolate", category: "Non Coffee", price: "130" },
-        { id: 8, name: "Croissant", category: "Snacks", price: "85" },
-    ];
-};
 
 const availableAddOns = [
     { id: 'a1', name: 'Espresso', price: 40 },
@@ -35,7 +12,20 @@ const availableAddOns = [
 ];
 
 const StaffPOS = () => {
-    const [menuItems] = useState(getMenuData());
+    // --- 1. CLOUD STATE (MENU) ---
+    const [menuItems, setMenuItems] = useState([]);
+
+    useEffect(() => {
+        // Automatically syncs the POS buttons with the Admin Menu!
+        const menuCollection = collection(db, 'menu');
+        const unsubscribe = onSnapshot(menuCollection, (snapshot) => {
+            const menuData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setMenuItems(menuData);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
     const [activeCategory, setActiveCategory] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
     
@@ -65,7 +55,6 @@ const StaffPOS = () => {
         return (basePrice + addOnsPrice) * item.quantity;
     };
 
-    // -> THE FIX: Added subtotal calculation back! <-
     const calculateSubtotal = () => {
         return cart.reduce((total, item) => total + calculateItemLineTotal(item), 0);
     };
@@ -127,56 +116,79 @@ const StaffPOS = () => {
         setIsPaymentModalOpen(true);
     };
 
-    const handleFinalCheckout = () => {
+    // --- 2. CLOUD SAVING (TRANSACTIONS) ---
+    const handleFinalCheckout = async () => {
         if (!isPaymentValid) return;
 
+        const txnId = `TXN-${Math.floor(1000 + Math.random() * 9000)}`;
         const newTxn = {
-            id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
+            id: txnId,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            timestamp: new Date().toISOString(), // Great for sorting reports later
             orderType: orderType,
             items: cart.map(item => {
                 const safeName = item.name || "Unnamed Item";
                 const addOnsStr = item.addOns && item.addOns.length > 0 ? ` (+ ${item.addOns.map(a => `${a.qty}x ${a.name}`).join(', ')})` : '';
                 return `${item.quantity}x ${safeName} (${item.temperature})${addOnsStr}`;
             }).join(' | '),
-            total: `₱${totalAmountDue.toFixed(2)}`,
-            status: "Pending", 
+            total: totalAmountDue,
+            totalDisplay: `₱${totalAmountDue.toFixed(2)}`,
+            status: "Pending", // <--- THE FIX: This sends it to the Pending queue!
             staff: "Current User" 
         };
 
-        const existingTxns = JSON.parse(localStorage.getItem('clubC_transactions') || '[]');
-        localStorage.setItem('clubC_transactions', JSON.stringify([newTxn, ...existingTxns]));
-        
-        alert(`Payment successful!\nTotal: ₱${totalAmountDue.toFixed(2)}\nChange: ₱${changeAmount.toFixed(2)}\nOrder sent to kitchen.`);
-        setCart([]); setIsPaymentModalOpen(false); setAmountTendered('');
+        try {
+            // Save order directly to Firebase 'transactions' collection
+            await setDoc(doc(db, 'transactions', txnId), newTxn);
+            
+            alert(`Payment successful!\nTotal: ₱${totalAmountDue.toFixed(2)}\nChange: ₱${changeAmount.toFixed(2)}\nOrder sent to kitchen.`);
+            setCart([]); 
+            setIsPaymentModalOpen(false); 
+            setAmountTendered('');
+        } catch (error) {
+            console.error("Error saving transaction:", error);
+            alert("Failed to process payment. Check connection.");
+        }
     };
 
-    const handlePayoutSubmit = () => {
+    const handlePayoutSubmit = async () => {
         const amount = parseFloat(payoutAmount);
         if (!amount || amount <= 0) return alert("Please enter a valid amount.");
         
         const finalReason = payoutReason === 'Others' ? payoutOtherReason : payoutReason;
         if (!finalReason.trim()) return alert("Please specify the reason for payout.");
 
+        const outId = `OUT-${Math.floor(1000 + Math.random() * 9000)}`;
         const newPayout = {
-            id: `OUT-${Math.floor(1000 + Math.random() * 9000)}`,
+            id: outId,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            timestamp: new Date().toISOString(),
             orderType: 'Payout',
             items: `CASH PAYOUT: ${finalReason}`,
-            total: `-₱${amount.toFixed(2)}`,
+            total: -Math.abs(amount), // Negative for reports
+            totalDisplay: `-₱${amount.toFixed(2)}`,
             status: "Payout", 
             staff: "Current User" 
         };
 
-        const existingTxns = JSON.parse(localStorage.getItem('clubC_transactions') || '[]');
-        localStorage.setItem('clubC_transactions', JSON.stringify([newPayout, ...existingTxns]));
-        
-        alert(`Payout of ₱${amount.toFixed(2)} recorded for ${finalReason}.`);
-        setIsPayoutModalOpen(false); setPayoutAmount(''); setPayoutReason('Ice cubes'); setPayoutOtherReason('');
+        try {
+            // Save payout directly to Firebase 'transactions' collection
+            await setDoc(doc(db, 'transactions', outId), newPayout);
+
+            alert(`Payout of ₱${amount.toFixed(2)} recorded for ${finalReason}.`);
+            setIsPayoutModalOpen(false); 
+            setPayoutAmount(''); 
+            setPayoutReason('Ice cubes'); 
+            setPayoutOtherReason('');
+        } catch (error) {
+            console.error("Error saving payout:", error);
+            alert("Failed to record payout. Check connection.");
+        }
     };
 
     const categories = ['All', 'Coffee', 'Non Coffee', 'Refreshers', 'Snacks'];
     
+    // Filter menu logic based on Firebase data
     const filteredMenu = menuItems.filter(item => {
         const categoryMatch = activeCategory === 'All' || item.category === activeCategory;
         const safeName = item.name || ""; 
@@ -211,17 +223,23 @@ const StaffPOS = () => {
                         </div>
 
                         <div className="pos-grid">
-                            {filteredMenu.map(item => (
-                                <div className="pos-item-card" key={item.id} onClick={() => openCustomizationModal(item)}>
-                                    <div className="item-image-placeholder">
-                                        <span>{item.name ? item.name.charAt(0) : '?'}</span>
-                                    </div>
-                                    <div className="item-info">
-                                        <h4>{item.name || "Unnamed Item"}</h4>
-                                        <p>₱{parseFloat(item.price || 0).toFixed(2)}</p>
-                                    </div>
+                            {filteredMenu.length === 0 ? (
+                                <div style={{gridColumn: "1 / -1", textAlign: "center", padding: "40px", color: "var(--text-muted)"}}>
+                                    No active menu items found. Add them in the Admin Panel!
                                 </div>
-                            ))}
+                            ) : (
+                                filteredMenu.map(item => (
+                                    <div className="pos-item-card" key={item.id} onClick={() => openCustomizationModal(item)}>
+                                        <div className="item-image-placeholder">
+                                            <span>{item.name ? item.name.charAt(0) : '?'}</span>
+                                        </div>
+                                        <div className="item-info">
+                                            <h4>{item.name || "Unnamed Item"}</h4>
+                                            <p>₱{parseFloat(item.price || 0).toFixed(2)}</p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
 
@@ -306,7 +324,7 @@ const StaffPOS = () => {
                                 </div>
                             </div>
                             <div className="addons-section" style={{marginTop: "20px"}}>
-                                <div className="addon-row" style={{backgroundColor: "rgba(0,0,0,0.1)", border: "1px solid rgba(255,255,255,0.05)"}}>
+                                <div className="addon-row" style={{backgroundColor: "var(--input-bg)", border: "1px solid var(--border-color)"}}>
                                     <span className="addon-name-txt" style={{color: "var(--text-accent)"}}>Item Quantity</span>
                                     <div className="addon-stepper">
                                         <button onClick={() => setModalQuantity(Math.max(1, modalQuantity - 1))}>−</button>
@@ -341,7 +359,7 @@ const StaffPOS = () => {
                                 <h1 style={{ color: "var(--text-accent)", fontSize: "3rem", margin: "5px 0 0 0" }}>₱{totalAmountDue.toFixed(2)}</h1>
                             </div>
                             <div className="form-group" style={{ marginBottom: "20px" }}>
-                                <label style={{ color: "#ffffff", fontSize: "1rem", marginBottom: "10px", textAlign: "center", display: "block" }}>Amount Received</label>
+                                <label style={{ color: "var(--text-main)", fontSize: "1rem", marginBottom: "10px", textAlign: "center", display: "block" }}>Amount Received</label>
                                 <input type="number" className="payment-input" placeholder="0.00" value={amountTendered} onChange={(e) => setAmountTendered(e.target.value)} autoFocus />
                             </div>
                             <div className="change-display-box">
@@ -371,12 +389,12 @@ const StaffPOS = () => {
                         <div className="modal-body-custom" style={{ padding: "20px 30px" }}>
                             
                             <div className="form-group" style={{ marginBottom: "20px" }}>
-                                <label style={{ color: "#ffffff", fontSize: "1rem", marginBottom: "10px", display: "block" }}>Amount Taken (₱)</label>
+                                <label style={{ color: "var(--text-main)", fontSize: "1rem", marginBottom: "10px", display: "block" }}>Amount Taken (₱)</label>
                                 <input type="number" className="payment-input" style={{fontSize: "2rem"}} placeholder="0.00" value={payoutAmount} onChange={(e) => setPayoutAmount(e.target.value)} autoFocus />
                             </div>
 
                             <div className="form-group" style={{ marginBottom: "20px" }}>
-                                <label style={{ color: "#ffffff", fontSize: "1rem", marginBottom: "10px", display: "block" }}>Reason</label>
+                                <label style={{ color: "var(--text-main)", fontSize: "1rem", marginBottom: "10px", display: "block" }}>Reason</label>
                                 <div className="payout-reasons-grid">
                                     {['Ice cubes', 'Water gallons', 'Dish washing', 'Others'].map(reason => (
                                         <button 
@@ -414,7 +432,6 @@ const StaffPOS = () => {
                     </div>
                 </div>
             )}
-
         </div>
     );
 };

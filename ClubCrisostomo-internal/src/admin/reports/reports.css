@@ -1,71 +1,193 @@
-/* --- REPORTS CSS (Moody Dark Theme) --- */
+/* --- GLOBALS MATCHED TO ADMIN DASHBOARD --- */
+:root {
+    --bg-dark: #1a1a1a;
+    --widget-dark: #2a2a2a;
+    --text-main: #e0e0e0;
+    --text-accent: #c8a27c;
+    --text-muted: #888;
+    --white: #FFFFFF;
+}
 
-.reports-header {
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 250px;
+    background-color: #2b3238; 
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    height: 100vh;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+}
+
+.sidebar-header {
+    text-align: center;
     margin-bottom: 30px;
 }
 
-.reports-header h1 {
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
     margin: 0;
-    font-size: 2.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sidebar-nav li {
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #a0aab2;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.2s ease;
+}
+
+.sidebar-nav li:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+}
+
+.sidebar-nav li.active {
+    color: var(--text-accent);
+    background-color: rgba(200, 162, 124, 0.1);
+    border-left: 4px solid var(--text-accent);
+}
+
+.logout-btn {
+    margin-top: auto;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #a0aab2;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.logout-btn:hover {
+    background-color: #ef5350;
+    color: white;
+}
+
+/* --- MAIN CONTENT & LAYOUT --- */
+.main-content {
+    flex: 1;
+    padding: 30px 40px;
+    overflow-y: auto;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 25px;
+}
+
+.header-titles h1 {
+    margin: 0 0 5px 0;
+    font-size: 2rem;
     color: var(--text-accent);
 }
 
-/* Metrics Grid */
-.reports-metrics-grid {
+.header-titles p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* --- METRICS CARDS --- */
+.metrics-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
     margin-bottom: 30px;
 }
 
-.report-metric-card {
+.metric-card {
     background-color: var(--widget-dark);
     padding: 25px 20px;
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.03);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    transition: transform 0.3s ease;
+    gap: 10px;
+    border: 1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+    transition: transform 0.3s ease, border-color 0.3s ease; 
 }
 
-.report-metric-card:hover {
-    transform: translateY(-5px);
+.metric-card:hover {
+    transform: translateY(-5px); 
+    border-color: rgba(200, 162, 124, 0.3);
 }
 
-.metric-label {
+.metric-title {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 10px;
-    color: var(--text-main);
-    font-weight: bold;
-    font-size: 1rem;
+    gap: 8px;
 }
 
-.grey-dot {
-    width: 12px;
-    height: 12px;
+.dot {
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    background-color: rgba(255,255,255,0.2);
+    display: inline-block;
 }
 
-.report-metric-card .metric-value {
-    font-size: 2rem;
+.dot-grey { background-color: #888; }
+.dot-green { background-color: #81c784; }
+.dot-red { background-color: #ef5350; }
+.gold-dot { background-color: var(--text-accent); width: 10px; height: 10px; margin-right: 5px; }
+.muted-dot { background-color: #888; width: 10px; height: 10px; margin-right: 5px; }
+
+.metric-value {
+    font-size: 32px;
     font-weight: bold;
     color: var(--white);
 }
+.metric-value-green { color: #81c784; }
+.metric-value-red { color: #ef5350; }
 
-.text-green { color: #4caf50 !important; }
-.text-red { color: #ef5350 !important; }
-
-/* Chart Widget */
-.reports-chart-widget {
-    margin-bottom: 30px;
-    padding: 30px;
+/* --- WIDGETS --- */
+.widget {
+    background-color: var(--widget-dark);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.03);
 }
 
+.widget h2 {
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--text-accent); 
+    letter-spacing: 1px;
+}
+
+/* Chart Widget */
 .chart-header {
     display: flex;
     justify-content: space-between;
@@ -84,27 +206,22 @@
 .chart-legend-top span {
     display: flex;
     align-items: center;
-    gap: 8px;
 }
-
-.gold-dot { background-color: var(--text-accent); }
-.muted-dot { background-color: #888; }
 
 .chart-area-placeholder {
     height: 350px;
     position: relative;
-    padding-left: 50px; /* Space for Y axis */
-    padding-bottom: 30px; /* Space for X axis */
+    background-color: rgba(0,0,0,0.2);
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 8px;
 }
 
 .mock-chart-lines {
     position: absolute;
-    top: 0;
-    left: 50px;
-    right: 0;
-    bottom: 30px;
+    top: 0; left: 50px; right: 0; bottom: 30px;
     border-bottom: 1px dashed rgba(255,255,255,0.1);
     border-left: 1px dashed rgba(255,255,255,0.1);
+    padding-top: 20px;
 }
 
 .mock-svg {
@@ -113,31 +230,32 @@
     overflow: visible;
 }
 
+.chart-axes {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+}
+
 .y-axis {
     position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 30px;
+    left: 0; top: 20px; bottom: 30px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     color: var(--text-muted);
     font-size: 0.85rem;
-    padding-right: 15px;
+    padding-right: 10px;
     text-align: right;
-    width: 50px;
+    width: 40px;
 }
 
 .x-axis {
     position: absolute;
-    left: 50px;
-    right: 0;
-    bottom: 0;
+    left: 50px; right: 0; bottom: 5px;
     display: flex;
     justify-content: space-between;
     color: var(--text-muted);
     font-size: 0.85rem;
-    padding-top: 15px;
 }
 
 /* Bottom Tables Grid */
@@ -147,11 +265,6 @@
     gap: 20px;
 }
 
-.table-widget h2 {
-    font-size: 1.2rem;
-    margin-bottom: 20px;
-}
-
 .table-container {
     display: flex;
     flex-direction: column;
@@ -159,13 +272,13 @@
 
 .table-header {
     display: flex;
-    background-color: rgba(200, 162, 124, 0.1);
-    padding: 12px 20px;
+    background-color: rgba(0,0,0,0.2);
+    padding: 15px 20px;
     font-weight: bold;
-    color: var(--text-accent);
-    border-radius: 6px;
+    color: var(--text-muted);
+    border-radius: 6px 6px 0 0;
     font-size: 0.9rem;
-    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
 .table-row {
@@ -174,6 +287,11 @@
     border-bottom: 1px solid rgba(255,255,255,0.03);
     color: var(--text-main);
     font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.table-row:hover {
+    background-color: rgba(255,255,255,0.02);
 }
 
 .table-footer {
@@ -181,14 +299,16 @@
     padding: 20px;
     font-weight: bold;
     color: var(--white);
-    border-top: 2px solid rgba(255,255,255,0.1);
-    margin-top: 5px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 0 0 6px 6px;
 }
 
 /* Specific Column Layouts */
-.col-items { flex: 2; }
+.col-items { flex: 2; font-weight: bold; }
 .col-center { flex: 1.5; text-align: center; }
-.col-right { flex: 1; text-align: right; }
+.col-right { flex: 1; text-align: right; font-weight: bold; }
 
-.col-staff { flex: 1.5; }
+.col-staff { flex: 1.5; font-weight: bold; color: var(--white); }
 .col-role { flex: 1.5; }
+.text-gold { color: var(--text-accent); }

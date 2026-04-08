@@ -1,192 +1,179 @@
-/* --- MENU CSS (Upgraded to match Dashboard's Moody Aesthetic) --- */
+/* --- GLOBALS MATCHED TO ADMIN DASHBOARD --- */
+:root {
+    --bg-dark: #1a1a1a;
+    --widget-dark: #2a2a2a;
+    --text-main: #e0e0e0;
+    --text-accent: #c8a27c;
+    --text-muted: #888;
+    --white: #FFFFFF;
+}
 
-/* Base Layout */
-.menu-dashboard-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    background-color: var(--bg-dark); 
+body {
+    margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
     color: var(--text-main);
 }
 
-.top-bar {
-    display: none; 
-}
-
-.menu-layout {
+.dashboard-container {
     display: flex;
-    flex: 1;
-    overflow: hidden;
+    min-height: 100vh;
 }
 
-/* --- SIDEBAR --- */
-.menu-sidebar {
+/* --- SIDEBAR (Matched to Dashboard & Inventory) --- */
+.sidebar {
     width: 250px;
-    background-color: var(--widget-dark);
+    background-color: #2b3238; 
     display: flex;
     flex-direction: column;
-    padding: 30px 0;
-    border-right: 1px solid rgba(255,255,255,0.05);
+    padding: 20px;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    height: 100vh;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
 }
 
-.sidebar-title {
+.sidebar-header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
 }
 
-.sidebar-title h2 {
+.sidebar-header h2 {
     margin: 0;
     font-size: 1.8rem;
-    color: var(--text-accent);
+    color: var(--text-accent); 
     letter-spacing: 2px;
 }
 
-.menu-sidebar-nav ul {
+.sidebar-nav ul {
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.menu-sidebar-nav li {
-    padding: 15px 30px;
-    color: var(--text-main);
-    font-weight: 600;
+.sidebar-nav li {
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #a0aab2;
     cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
     display: flex;
     align-items: center;
     gap: 15px;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
-.menu-sidebar-nav li.active {
-    background-color: rgba(255, 255, 255, 0.08); 
+.sidebar-nav li:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+}
+
+.sidebar-nav li.active {
     color: var(--text-accent);
-    border-right: 3px solid var(--text-accent); 
+    background-color: rgba(200, 162, 124, 0.1);
+    border-left: 4px solid var(--text-accent);
 }
 
-.menu-sidebar-nav li:hover {
-    background-color: rgba(255, 255, 255, 0.03); 
-    color: var(--text-accent);
-}
-
-.menu-logout-btn {
+.logout-btn {
     margin-top: auto;
-    margin-inline: 20px;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #a0aab2;
+    border: none;
     padding: 12px;
-    background-color: rgba(0, 0, 0, 0.4);
-    color: var(--text-muted);
-    border: 1px solid rgba(255,255,255,0.1);
-    font-weight: bold;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s;
-    border-radius: 6px;
+    font-weight: bold;
+    transition: background-color 0.2s;
 }
 
-.menu-logout-btn:hover {
-    background-color: var(--text-accent);
-    color: var(--bg-dark);
-    border-color: var(--text-accent);
+.logout-btn:hover {
+    background-color: #ef5350;
+    color: white;
 }
 
 /* --- MAIN CONTENT --- */
-.menu-main-content {
+.main-content {
     flex: 1;
     padding: 30px 40px;
     overflow-y: auto;
 }
 
-/* Header */
-.menu-header {
+.page-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
-.menu-header-titles h1 {
+.header-titles h1 {
     margin: 0 0 5px 0;
-    font-size: 1.8rem;
+    font-size: 2rem;
     color: var(--text-accent);
 }
 
-.menu-header-titles p {
+.header-titles p {
     margin: 0;
     color: var(--text-muted);
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 1px;
+    font-size: 0.95rem;
 }
 
-.menu-header-actions {
+.header-actions {
     display: flex;
     gap: 15px;
+    align-items: center;
 }
 
-/* Inputs & Filters */
-.menu-search-input, .menu-filter-input {
+/* Matched Search Bar Style */
+.search-bar {
     background-color: var(--widget-dark);
-    border: 1px solid rgba(255,255,255,0.08);
-    padding: 10px 15px;
-    font-size: 0.9rem;
-    color: var(--text-main);
-    width: 220px;
+    padding: 8px 15px;
     border-radius: 8px;
-    outline: none;
-    transition: border-color 0.3s;
-}
-
-.menu-search-input:focus, .menu-filter-input:focus {
-    border-color: var(--text-accent);
-}
-
-/* Add Button */
-.add-btn-group {
     display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 250px;
+    border: 1px solid #444;
 }
 
-.menu-add-btn {
+.search-input {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    width: 100%;
+    outline: none;
+}
+
+.search-icon {
+    color: var(--text-muted);
+}
+
+.add-btn {
     background-color: var(--text-accent);
     color: var(--bg-dark);
     border: none;
     padding: 10px 20px;
+    border-radius: 6px;
     font-weight: bold;
     cursor: pointer;
-    border-radius: 8px 0 0 8px;
-    transition: background-color 0.2s;
+    transition: 0.2s;
 }
 
-.menu-add-btn:hover {
-    background-color: var(--white);
+.add-btn:hover {
+    background-color: var(--text-main);
 }
 
-.menu-dropdown-btn {
-    background-color: rgba(200, 162, 124, 0.8);
-    color: var(--bg-dark);
-    border: none;
-    padding: 10px 15px;
-    cursor: pointer;
-    border-radius: 0 8px 8px 0;
-    border-left: 1px solid rgba(0,0,0,0.1);
-}
-
-/* Controls & Filters */
-.menu-controls-section {
-    margin-bottom: 30px;
-}
-
-.menu-filters {
-    display: flex;
-    justify-content: flex-end; /* Pushes the search bar to the right */
-    margin-bottom: 20px;
-}
-
-/* Tabs */
+/* --- TABS --- */
 .menu-tabs {
     display: flex;
     gap: 30px;
     border-bottom: 1px solid rgba(255,255,255,0.05);
     padding-bottom: 10px;
+    margin-bottom: 30px;
 }
 
 .menu-tabs .tab {
@@ -385,11 +372,10 @@
     font-weight: bold;
 }
 
-/* Combined styling for inputs AND dropdowns */
 .form-group input, 
 .form-group select {
     background-color: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid #444;
     padding: 12px;
     border-radius: 6px;
     color: var(--text-main);
@@ -403,7 +389,6 @@
     border-color: var(--text-accent);
 }
 
-/* Fix for dark mode dropdown text visibility */
 .form-group select option {
     background-color: #2b3238; 
     color: #ffffff;

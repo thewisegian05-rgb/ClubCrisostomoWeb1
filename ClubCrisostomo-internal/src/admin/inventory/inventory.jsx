@@ -186,7 +186,7 @@ const Inventory = () => {
                     </div>
                     <div className="header-actions">
                         <div className="search-bar">
-                            <span className="search-icon">🔍</span>
+                            <span className="search-icon"></span>
                             <input 
                                 type="text" 
                                 placeholder="Search raw material..." 
