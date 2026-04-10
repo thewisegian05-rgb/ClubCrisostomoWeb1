@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../../firebase.js'; 
+import { db, auth } from '../../firebase.js'; // <-- Added auth here
 import { doc, getDoc, setDoc } from 'firebase/firestore'; 
+import { updateEmail, updatePassword } from 'firebase/auth'; // <-- Added Auth methods
 import './settingsadmin.css';
 
 const SettingsAdmin = () => {
@@ -13,7 +14,6 @@ const SettingsAdmin = () => {
     const [theme, setTheme] = useState(localStorage.getItem('clubC_admin_theme') || 'dark');
     const [mlEnabled, setMlEnabled] = useState(true);
     
-    // Added a state to track the actual password from the database
     const [currentDbPassword, setCurrentDbPassword] = useState('admin123');
 
     useEffect(() => {
@@ -29,7 +29,6 @@ const SettingsAdmin = () => {
                     if (data.mlEnabled !== undefined) setMlEnabled(data.mlEnabled);
                     if (data.password) setCurrentDbPassword(data.password);
                 } else {
-                    // Create the document with defaults if it doesn't exist yet
                     await setDoc(docRef, {
                         email: 'Admin@clubc.com',
                         phone: '+63 919 698 1234',
@@ -75,11 +74,17 @@ const SettingsAdmin = () => {
     const handleSaveModal = async () => {
         try {
             const docRef = doc(db, 'settings', 'adminPrefs');
+            const user = auth.currentUser; // Get the actual logged-in user from Firebase Auth
 
             if (modalType === 'email') {
+                // 1. Update Firebase Authentication (The Security Guard)
+                if (user) {
+                    await updateEmail(user, inputValue);
+                }
+                // 2. Update Firestore Database (The Spreadsheet)
                 setEmail(inputValue);
                 await setDoc(docRef, { email: inputValue }, { merge: true });
-                alert(`Notice: Admin email changed to ${inputValue}`);
+                alert(`Notice: Admin email successfully changed to ${inputValue}`);
             } 
             else if (modalType === 'phone') {
                 setPhone(inputValue);
@@ -97,7 +102,11 @@ const SettingsAdmin = () => {
                     return alert("New passwords do not match!");
                 }
                 
-                // Save the new password to Firebase and update local state
+                // 1. Update Firebase Authentication (The Security Guard)
+                if (user) {
+                    await updatePassword(user, passwordData.new);
+                }
+                // 2. Update Firestore Database (The Spreadsheet)
                 await setDoc(docRef, { password: passwordData.new }, { merge: true });
                 setCurrentDbPassword(passwordData.new);
                 alert("Password successfully updated! Use this to log in next time.");
@@ -105,7 +114,12 @@ const SettingsAdmin = () => {
             setIsModalOpen(false);
         } catch (error) {
             console.error("Error saving:", error);
-            alert("Failed to save settings.");
+            // Firebase requires you to have logged in recently to change sensitive info.
+            if (error.code === 'auth/requires-recent-login') {
+                alert("For security reasons, Firebase requires you to log out and log back in right now before changing your email or password.");
+            } else {
+                alert("Failed to save settings: " + error.message);
+            }
         }
     };
 
