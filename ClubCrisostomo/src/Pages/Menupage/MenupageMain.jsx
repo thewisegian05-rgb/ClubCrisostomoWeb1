@@ -2,48 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../../Components/MenupageComponents/Menupage.css";
 
-const ITEM_IMG = "/process-preparing-espresso-professional-coffee-machine-closeup.jpg";
+// --- 1. IMPORT FIREBASE ---
+// Make sure this points to your exact firebase.jsx file location
+import { db } from "../../firebase.jsx"; 
+import { collection, onSnapshot } from "firebase/firestore";
 
-const MENU_DATA = {
-  coffee: [
-    { name: "Long Black", desc: "Pure espresso with hot water.", price: 90, icedPrice: 100, type: "drink", img: ITEM_IMG },
-    { name: "Cinnamon Latte", desc: "Espresso with steamed milk and cinnamon.", price: 100, icedPrice: 110, type: "drink", img: ITEM_IMG },
-    { name: "Muscuvado Latte", desc: "Sweetened with natural muscovado sugar.", price: 110, icedPrice: 120, type: "drink", img: ITEM_IMG },
-    { name: "Dirty Matcha", desc: "Matcha green tea topped with espresso.", price: 120, icedPrice: 130, type: "drink", img: ITEM_IMG },
-    { name: "Hazelnut Latte", desc: "Creamy espresso with hazelnut notes.", price: 110, icedPrice: 120, type: "drink", img: ITEM_IMG },
-    { name: "Mochaccino", desc: "Chocolate-flavored cappuccino.", price: 110, icedPrice: 120, type: "drink", img: ITEM_IMG },
-    { name: "Spanish Latte", desc: "Smooth espresso with creamy sweetness.", price: 100, icedPrice: 110, type: "drink", img: ITEM_IMG },
-    { name: "Caramel Macchiato", desc: "Espresso with vanilla and caramel drizzle.", price: 110, icedPrice: 120, type: "drink", img: ITEM_IMG },
-    { name: "Citron Espresso", desc: "Espresso with a refreshing citrus twist.", price: 110, icedPrice: 120, type: "drink", img: ITEM_IMG },
-    { name: "Dirty Hazelnut Matcha", desc: "Hazelnut matcha with an espresso kick.", price: 120, icedPrice: 130, type: "drink", img: ITEM_IMG },
-  ],
-  noncoffee: [
-    { name: "Chocolate", desc: "Rich and creamy cocoa.", price: 90, icedPrice: 100, type: "drink", img: ITEM_IMG },
-    { name: "Strawberry", desc: "Sweet milk with strawberry flavor.", price: 0, icedPrice: 100, type: "drink", img: ITEM_IMG },
-    { name: "Blueberry", desc: "Creamy milk with blueberry essence.", price: 0, icedPrice: 100, type: "drink", img: ITEM_IMG },
-    { name: "Oreo Matcha", desc: "Matcha latte with crushed Oreos.", price: 0, icedPrice: 120, type: "drink", img: ITEM_IMG },
-    { name: "Mixed Berries", desc: "Refreshing blend of berry flavors.", price: 0, icedPrice: 110, type: "drink", img: ITEM_IMG },
-    { name: "Matcha", desc: "Premium green tea with milk.", price: 100, icedPrice: 110, type: "drink", img: ITEM_IMG },
-    { name: "Choco Cereal", desc: "Chocolate milk with crunchy cereal.", price: 0, icedPrice: 120, type: "drink", img: ITEM_IMG },
-    { name: "Berry Matcha", desc: "Matcha latte with berry notes.", price: 0, icedPrice: 120, type: "drink", img: ITEM_IMG },
-    { name: "Hazelnut Matcha", desc: "Nutty hazelnut with green tea.", price: 110, icedPrice: 120, type: "drink", img: ITEM_IMG },
-  ],
-  refreshers: [
-    { name: "Strawberry Soda", desc: "Refreshing fruity strawberry soda.", price: 0, icedPrice: 80, type: "drink", img: ITEM_IMG },
-    { name: "Blue Lychee Soda", desc: "Cool blue lychee flavored soda.", price: 0, icedPrice: 80, type: "drink", img: ITEM_IMG },
-    { name: "Citron & Ginger Tea", desc: "Zesty citron with a warm ginger kick.", price: 90, icedPrice: 100, type: "drink", img: ITEM_IMG },
-    { name: "Passion Fruit Soda", desc: "Tropical passion fruit fizz.", price: 0, icedPrice: 80, type: "drink", img: ITEM_IMG },
-    { name: "Calamansi Soda", desc: "Local citrus refresher.", price: 0, icedPrice: 90, type: "drink", img: ITEM_IMG },
-    { name: "Honey Calamansi", desc: "Sweet honey with tart calamansi.", price: 80, icedPrice: 90, type: "drink", img: ITEM_IMG },
-    { name: "Club Crisostomo Tea", desc: "Our signature house blend tea.", price: 100, icedPrice: 110, type: "drink", img: ITEM_IMG },
-  ],
-  snacks: [
-    { name: "Blueberry Toastie", desc: "Sweet and toasted blueberry treat.", price: 65, type: "snack", img: ITEM_IMG },
-    { name: "Mozzacheddar Toastie", desc: "Gooey mozzarella and cheddar melt.", price: 70, type: "snack", img: ITEM_IMG },
-    { name: "French Fries", desc: "Crispy golden potato fries.", price: 90, type: "snack", img: ITEM_IMG },
-    { name: "Hashbrowns", desc: "Crispy fried shredded potatoes.", price: 110, type: "snack", img: ITEM_IMG },
-  ]
-};
+const ITEM_IMG = "/process-preparing-espresso-professional-coffee-machine-closeup.jpg";
 
 const ADDON_PRICES = { 
   Espresso: 40, Syrup: 30, "Nata Jelly": 15, Cereal: 25, Oreo: 25, Cinnamon: 20, "Bottled Water": 20 
@@ -57,28 +21,31 @@ const AutoCarousel = ({ items, onCardClick }) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
+    if (!items || items.length === 0) return;
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
     }, 3500);
     return () => clearInterval(interval);
-  }, [items.length]);
+  }, [items]);
+
+  if (!items || items.length === 0) return null;
 
   return (
-    <div className="slider-wrapper menu-carousel-spacing">
-      <div className="slider-container">
+    <div className="carousel-wrapper">
+      <div className="carousel-container">
         {items.map((item, index) => {
           let position = "nextCard";
           if (index === activeIndex) position = "activeCard";
           else if (index === activeIndex - 1 || (activeIndex === 0 && index === items.length - 1)) position = "prevCard";
 
           return (
-            <div key={index} className={`slider-card ${position}`} onClick={() => onCardClick(item)}>
-              <div className="card-image-box">
-                <img src={ITEM_IMG} alt={item.name} />
+            <div key={item.id || index} className={`carousel-card ${position}`} onClick={() => onCardClick(item)}>
+              <div className="carousel-image-box">
+                <img src={item.img || ITEM_IMG} alt={item.name} />
               </div>
-              <div className="card-details">
-                <h3>{item.name}</h3>
-                <span className="price-tag">₱{item.price === 0 ? item.icedPrice : item.price}</span>
+              <div className="carousel-details">
+                <h4>{item.name}</h4>
+                <span className="price-tag">₱{item.price}</span>
               </div>
             </div>
           );
@@ -95,9 +62,39 @@ export default function MenupageMain() {
   const [tempMode, setTempMode] = useState("hot"); 
   const [addons, setAddons] = useState(INITIAL_ADDONS);
   const [expandedSections, setExpandedSections] = useState({});
-  
-  // Notification State
   const [notification, setNotification] = useState({ show: false, message: "" });
+  
+  // --- 2. LIVE FIREBASE STATE ---
+  const [menuData, setMenuData] = useState({
+    'Coffee': [], 'Non Coffee': [], 'Refreshers': [], 'Snacks': []
+  });
+
+  // --- 3. FETCH LIVE DATA FROM ADMIN ---
+  useEffect(() => {
+    const menuCollection = collection(db, 'menu');
+    
+    // onSnapshot listens for real-time changes!
+    const unsubscribe = onSnapshot(menuCollection, (snapshot) => {
+      const liveMenu = { 'Coffee': [], 'Non Coffee': [], 'Refreshers': [], 'Snacks': [] };
+      
+      snapshot.docs.forEach((doc) => {
+        const item = { id: doc.id, ...doc.data() };
+        
+        // Hide items marked "Not Available" by admin
+        if (item.availability === "Not Available") return;
+        
+        // Push the item into the correct category array based on what the Admin selected
+        const category = item.category || 'Coffee';
+        if (liveMenu[category]) {
+          liveMenu[category].push(item);
+        }
+      });
+      
+      setMenuData(liveMenu);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
@@ -117,9 +114,9 @@ export default function MenupageMain() {
 
   const calculateTotal = () => {
     if (!selectedItem) return 0;
-    let base = (tempMode === "iced" || selectedItem.price === 0) ? (selectedItem.icedPrice || selectedItem.price) : selectedItem.price;
+    let basePrice = Number(selectedItem.price) || 0; 
     let addonTotal = Object.entries(addons).reduce((acc, [name, qty]) => acc + (qty * (ADDON_PRICES[name] || 0)), 0);
-    return base + addonTotal;
+    return basePrice + addonTotal;
   };
 
   const addToCart = () => {
@@ -128,13 +125,15 @@ export default function MenupageMain() {
       .filter(([_, qty]) => qty > 0)
       .map(([name, qty]) => ({ name, qty, price: ADDON_PRICES[name] }));
 
+    const isDrink = selectedItem.category !== "Snacks";
+
     const orderItem = {
-      name: `${selectedItem.name} (${selectedItem.type === "drink" ? tempMode.toUpperCase() : "Standard"})`,
-      basePrice: selectedItem.price,
+      name: `${selectedItem.name} ${isDrink ? `(${tempMode.toUpperCase()})` : ""}`,
+      basePrice: Number(selectedItem.price),
       addons: activeAddons,
       total: calculateTotal(),
-      quantity: 1, // Default quantity for cart logic
-      img: selectedItem.img,
+      quantity: 1, 
+      img: selectedItem.img || ITEM_IMG,
       id: Date.now()
     };
 
@@ -143,14 +142,12 @@ export default function MenupageMain() {
     setCartCount(cart.length);
     setModalOpen(false);
 
-    // Trigger Notification
     setNotification({ show: true, message: `${selectedItem.name} added to cart!` });
     setTimeout(() => setNotification({ show: false, message: "" }), 3000);
   };
 
   return (
     <div className="menu-page">
-      {/* Toast Notification */}
       {notification.show && (
         <div className="cart-notification animate-pop">
           <div className="notif-content">
@@ -169,10 +166,10 @@ export default function MenupageMain() {
         
         <div className="nav-buttons-centered">
           <ul className="nav-links">
-            <li><a href="#coffee">Coffee</a></li>
-            <li><a href="#noncoffee">Non-Coffee</a></li>
-            <li><a href="#refreshers">Refreshers</a></li>
-            <li><a href="#snacks">Snacks</a></li>
+            <li><a href="#Coffee">Coffee</a></li>
+            <li><a href="#Non Coffee">Non-Coffee</a></li>
+            <li><a href="#Refreshers">Refreshers</a></li>
+            <li><a href="#Snacks">Snacks</a></li>
           </ul>
         </div>
 
@@ -187,7 +184,11 @@ export default function MenupageMain() {
         <h2>Crafted with care, brewed with passion.</h2>
       </header>
 
-      {Object.entries(MENU_DATA).map(([sectionKey, items]) => {
+      {/* --- 4. RENDER LIVE FIREBASE DATA --- */}
+      {Object.entries(menuData).map(([sectionKey, items]) => {
+        // Skip rendering the section entirely if the admin hasn't added any items to it yet
+        if (items.length === 0) return null;
+
         const isExpanded = expandedSections[sectionKey];
         const visibleItems = isExpanded ? items : items.slice(0, 6);
 
@@ -199,13 +200,16 @@ export default function MenupageMain() {
 
             <div className="menu-grid">
               {visibleItems.map((item, idx) => (
-                <div key={idx} className="menu-card animate-in" onClick={() => openModal(item)}>
-                  <img src={item.img} alt={item.name} />
+                <div key={item.id || idx} className="menu-card animate-in" onClick={() => openModal(item)} style={{animationDelay: `${idx * 0.05}s`}}>
+                  <div className="card-img-wrapper">
+                     <img src={item.img || ITEM_IMG} alt={item.name} />
+                  </div>
                   <div className="card-info">
                     <h4>{item.name}</h4>
-                    <p>{item.desc}</p>
+                    {/* Fallback description since the admin form doesn't have one yet */}
+                    <p>{item.desc || "A delicious treat from Club Crisostomo."}</p>
                     <div className="card-footer">
-                      <span className="card-price">₱{item.price === 0 ? item.icedPrice : item.price}</span>
+                      <span className="card-price">₱{item.price}</span>
                     </div>
                   </div>
                 </div>
@@ -213,20 +217,21 @@ export default function MenupageMain() {
             </div>
             {items.length > 6 && (
               <button className="toggle-btn" onClick={() => setExpandedSections(prev => ({...prev, [sectionKey]: !prev[sectionKey]}))}>
-                {isExpanded ? "Show Less" : "Show More"}
+                {isExpanded ? "Show Less" : "View Full Menu"}
               </button>
             )}
           </section>
         );
       })}
 
-      {modalOpen && (
+      {modalOpen && selectedItem && (
         <div className="modal show" onClick={() => setModalOpen(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <button className="close" onClick={() => setModalOpen(false)}>&times;</button>
             <h3 className="modal-item-name">{selectedItem.name}</h3>
             
-            {selectedItem.type === "drink" && (
+            {/* Only show Hot/Iced toggle if it's not a snack */}
+            {selectedItem.category !== "Snacks" && (
               <div className="temp-selection">
                 <p>Select Temperature</p>
                 <div className="temp-toggle-container">
@@ -234,7 +239,6 @@ export default function MenupageMain() {
                   <button 
                     className={`temp-btn ${tempMode === "hot" ? "active" : ""}`} 
                     onClick={() => setTempMode("hot")}
-                    disabled={selectedItem.price === 0}
                   >Hot</button>
                   <button 
                     className={`temp-btn ${tempMode === "iced" ? "active" : ""}`} 
@@ -254,12 +258,12 @@ export default function MenupageMain() {
                 <div className="addon-row" key={addonKey}>
                   <span className="addon-name">{addonKey}</span>
                   <div className="addon-controls-wrapper">
+                    <span className="addon-price">₱{ADDON_PRICES[addonKey]}</span>
                     <div className="qty-controls">
                       <button onClick={() => updateAddon(addonKey, -1)}>−</button>
                       <span className="count">{addons[addonKey]}</span>
                       <button onClick={() => updateAddon(addonKey, 1)}>+</button>
                     </div>
-                    <span className="addon-price">₱{ADDON_PRICES[addonKey]}</span>
                   </div>
                 </div>
               ))}

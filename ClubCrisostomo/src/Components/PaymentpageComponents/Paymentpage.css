@@ -59,11 +59,49 @@
     color: #ccc;
 }
 
-/* METHOD SELECTION GRID */
+/* --- NEW DELIVERY INPUTS --- */
+.delivery-details-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.checkout-input {
+    width: 100%;
+    padding: 14px 15px;
+    border-radius: 10px;
+    background: #111;
+    border: 1px solid #333;
+    color: #fff;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+}
+
+.checkout-input:focus {
+    outline: none;
+    border-color: #C8A27C;
+    background: #151515;
+}
+
+.checkout-input::placeholder {
+    color: #666;
+}
+
+/* --- METHOD SELECTION GRID --- */
 .method-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
+    margin-bottom: 25px;
+}
+
+/* Updated 2-column grid for just Cash & E-Wallet */
+.method-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
     margin-bottom: 25px;
 }
 
@@ -94,7 +132,7 @@
     color: #C8A27C;
 }
 
-/* FORM FIELDS */
+/* --- FORM FIELDS & QR --- */
 .card-fields, .qr-section {
     display: flex;
     flex-direction: column;
@@ -143,14 +181,21 @@
     transition: 0.3s;
 }
 
-.verify-btn:hover, .pay-btn:hover {
+.verify-btn:hover:not(:disabled), .pay-btn:hover:not(:disabled) {
     background: #e2ba92;
     transform: translateY(-2px);
+}
+
+.verify-btn:disabled, .pay-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .animate-in {
     animation: fadeIn 0.4s ease forwards;
 }
+
+/* --- SUCCESS SCREEN --- */
 .success-container {
     background: #1a1a1a;
     width: 100%;

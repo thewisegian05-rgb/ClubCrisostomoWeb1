@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/sidebar.jsx';
 import './stafftransactions.css';
-import { db } from '../../firebase'; // <-- Fixed import path
+import { db } from '../../firebase'; 
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 
 const StaffTransactions = () => {
@@ -14,20 +14,46 @@ const StaffTransactions = () => {
 
     // Fetch data from Firebase in real-time
     useEffect(() => {
-        const txnsCollectionRef = collection(db, 'transactions'); // Make sure your Firestore collection is named 'transactions'
+        // FIXED: Changed 'transactions' to 'orders' to match the customer app!
+        const txnsCollectionRef = collection(db, 'orders'); 
         
-        // onSnapshot listens for real-time changes in the database
         const unsubscribe = onSnapshot(txnsCollectionRef, (snapshot) => {
-            const txnsData = snapshot.docs.map(doc => ({
-                id: doc.id, // Using the Firebase document ID
-                ...doc.data()
-            }));
+            const txnsData = snapshot.docs.map(doc => {
+                const data = doc.data();
+                
+                // Format the items array into a readable string for the table view
+                const itemsSummary = Array.isArray(data.items) 
+                    ? data.items.map(item => `${item.quantity || 1}x ${item.name}`).join(', ')
+                    : data.items || "No items";
+
+                // Format the Firestore timestamp to a readable clock time
+                const timeString = data.createdAt?.toDate 
+                    ? data.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                    : "Just now";
+
+                return {
+                    id: doc.id, // Firebase doc ID (used for updating status)
+                    receiptId: data.receiptId || doc.id, // Display ID
+                    time: timeString,
+                    customerName: data.customerName || "Walk-in",
+                    itemsString: itemsSummary, // For table summary
+                    itemsArray: data.items || [], // For receipt modal
+                    totalAmount: parseFloat(data.totalAmount || 0), // Use numbers for math
+                    totalFormatted: `₱${parseFloat(data.totalAmount || 0).toFixed(2)}`,
+                    status: data.status || "Pending",
+                    orderType: data.address ? "Delivery" : (data.tableNumber ? "Dine In" : "Takeout"),
+                    paymentMethod: data.paymentMethod || "Cash",
+                    address: data.address || "",
+                    contactNumber: data.contactNumber || "",
+                    landmark: data.landmark || "",
+                    ...data
+                };
+            });
             setTransactions(txnsData);
         }, (error) => {
             console.error("Error fetching transactions: ", error);
         });
 
-        // Cleanup listener on component unmount
         return () => unsubscribe();
     }, []);
 
@@ -35,9 +61,9 @@ const StaffTransactions = () => {
     const changeStatus = async (e, id, newStatus) => {
         e.stopPropagation();
         try {
-            const txnDocRef = doc(db, 'transactions', id);
+            // FIXED: Changed 'transactions' to 'orders' here too!
+            const txnDocRef = doc(db, 'orders', id);
             await updateDoc(txnDocRef, { status: newStatus });
-            // Note: We don't need to manually update state here because onSnapshot will automatically detect the change and update the UI.
         } catch (error) {
             console.error("Error updating status: ", error);
             alert("Failed to update status. Please try again.");
@@ -59,20 +85,14 @@ const StaffTransactions = () => {
     const voidedTxns = historyTxns.filter(t => t.status === 'Voided');
     const payoutTxns = historyTxns.filter(t => t.status === 'Payout');
 
-    const parseCurrency = (str) => {
-        if (!str) return 0;
-        return parseFloat(String(str).replace(/[^\d.-]/g, ''));
-    };
-
-    const completedRevenue = completedTxns.reduce((sum, t) => sum + parseCurrency(t.total), 0);
-    const voidedRevenue = voidedTxns.reduce((sum, t) => sum + parseCurrency(t.total), 0);
-    const totalPayouts = payoutTxns.reduce((sum, t) => sum + Math.abs(parseCurrency(t.total)), 0); 
+    const completedRevenue = completedTxns.reduce((sum, t) => sum + t.totalAmount, 0);
+    const voidedRevenue = voidedTxns.reduce((sum, t) => sum + t.totalAmount, 0);
+    const totalPayouts = payoutTxns.reduce((sum, t) => sum + Math.abs(t.totalAmount), 0); 
     
-    // Gross sales minus cash taken out = what should be in the register.
     const expectedCashInDrawer = completedRevenue - totalPayouts;
 
-    const dineInRevenue = completedTxns.filter(t => t.orderType !== 'Takeout').reduce((sum, t) => sum + parseCurrency(t.total), 0);
-    const takeoutRevenue = completedTxns.filter(t => t.orderType === 'Takeout').reduce((sum, t) => sum + parseCurrency(t.total), 0);
+    const dineInRevenue = completedTxns.filter(t => t.orderType !== 'Takeout' && t.orderType !== 'Delivery').reduce((sum, t) => sum + t.totalAmount, 0);
+    const takeoutRevenue = completedTxns.filter(t => t.orderType === 'Takeout' || t.orderType === 'Delivery').reduce((sum, t) => sum + t.totalAmount, 0);
 
     return (
         <div className="dashboard-container">
@@ -94,7 +114,7 @@ const StaffTransactions = () => {
                         </div>
                         <div className="table-header">
                             <div style={{flex: 1}}>Receipt ID</div>
-                            <div style={{flex: 1}}>Time / Staff</div>
+                            <div style={{flex: 1}}>Time / Customer</div>
                             <div style={{flex: 2}}>Items Summary</div>
                             <div style={{flex: 1, textAlign: "center"}}>Actions</div>
                         </div>
@@ -103,11 +123,14 @@ const StaffTransactions = () => {
                                 pendingTxns.map(txn => (
                                     <div className="table-row clickable-row" key={txn.id} onClick={() => handleViewReceipt(txn)}>
                                         <div style={{flex: 1}}>
-                                            <div style={{color: "var(--text-accent)", fontWeight: "bold"}}>{txn.id}</div>
-                                            <span className={`order-badge ${txn.orderType === 'Takeout' ? 'badge-takeout' : 'badge-dinein'}`}>{txn.orderType || 'Dine In'}</span>
+                                            <div style={{color: "var(--text-accent)", fontWeight: "bold"}}>{txn.receiptId}</div>
+                                            <span className={`order-badge ${txn.orderType === 'Dine In' ? 'badge-dinein' : 'badge-takeout'}`}>{txn.orderType}</span>
                                         </div>
-                                        <div style={{flex: 1}}><div>{txn.time}</div><div className="text-muted" style={{fontSize: "0.8rem"}}>By: {txn.staff}</div></div>
-                                        <div style={{flex: 2, color: "var(--text-muted)", paddingRight: "20px"}}>{txn.items}</div>
+                                        <div style={{flex: 1}}>
+                                            <div>{txn.time}</div>
+                                            <div className="text-muted" style={{fontSize: "0.8rem"}}>Customer: {txn.customerName}</div>
+                                        </div>
+                                        <div style={{flex: 2, color: "var(--text-muted)", paddingRight: "20px"}}>{txn.itemsString}</div>
                                         <div style={{flex: 1, display: "flex", gap: "8px", justifyContent: "center"}}>
                                             <button className="prepare-btn" onClick={(e) => changeStatus(e, txn.id, 'Preparing')}>Prepare</button>
                                             <button className="void-btn" onClick={(e) => changeStatus(e, txn.id, 'Voided')}>Void</button>
@@ -125,7 +148,7 @@ const StaffTransactions = () => {
                         </div>
                         <div className="table-header">
                             <div style={{flex: 1}}>Receipt ID</div>
-                            <div style={{flex: 1}}>Time / Staff</div>
+                            <div style={{flex: 1}}>Time / Customer</div>
                             <div style={{flex: 2}}>Items Summary</div>
                             <div style={{flex: 1, textAlign: "center"}}>Action</div>
                         </div>
@@ -134,11 +157,14 @@ const StaffTransactions = () => {
                                 preparingTxns.map(txn => (
                                     <div className="table-row clickable-row" key={txn.id} onClick={() => handleViewReceipt(txn)}>
                                         <div style={{flex: 1}}>
-                                            <div style={{color: "var(--text-accent)", fontWeight: "bold"}}>{txn.id}</div>
-                                            <span className={`order-badge ${txn.orderType === 'Takeout' ? 'badge-takeout' : 'badge-dinein'}`}>{txn.orderType || 'Dine In'}</span>
+                                            <div style={{color: "var(--text-accent)", fontWeight: "bold"}}>{txn.receiptId}</div>
+                                            <span className={`order-badge ${txn.orderType === 'Dine In' ? 'badge-dinein' : 'badge-takeout'}`}>{txn.orderType}</span>
                                         </div>
-                                        <div style={{flex: 1}}><div>{txn.time}</div><div className="text-muted" style={{fontSize: "0.8rem"}}>By: {txn.staff}</div></div>
-                                        <div style={{flex: 2, color: "var(--text-muted)", paddingRight: "20px"}}>{txn.items}</div>
+                                        <div style={{flex: 1}}>
+                                            <div>{txn.time}</div>
+                                            <div className="text-muted" style={{fontSize: "0.8rem"}}>Customer: {txn.customerName}</div>
+                                        </div>
+                                        <div style={{flex: 2, color: "var(--text-muted)", paddingRight: "20px"}}>{txn.itemsString}</div>
                                         <div style={{flex: 1, display: "flex", justifyContent: "center"}}>
                                             <button className="complete-btn" onClick={(e) => changeStatus(e, txn.id, 'Completed')}>Done</button>
                                         </div>
@@ -155,7 +181,7 @@ const StaffTransactions = () => {
                         </div>
                         <div className="table-header">
                             <div style={{flex: 1}}>Receipt ID</div>
-                            <div style={{flex: 1}}>Time / Staff</div>
+                            <div style={{flex: 1}}>Time / Customer</div>
                             <div style={{flex: 2}}>Items Summary</div>
                             <div style={{flex: 1}}>Status</div>
                             <div style={{flex: 1, textAlign: "right"}}>Total</div>
@@ -165,23 +191,26 @@ const StaffTransactions = () => {
                                 historyTxns.map(txn => (
                                     <div className="table-row clickable-row" key={txn.id} onClick={() => handleViewReceipt(txn)}>
                                         <div style={{flex: 1}}>
-                                            <div style={{color: "var(--text-muted)", fontWeight: "bold"}}>{txn.id}</div>
-                                            {/* Hide badge for Payouts */}
+                                            <div style={{color: "var(--text-muted)", fontWeight: "bold"}}>{txn.receiptId}</div>
                                             {txn.status !== 'Payout' && (
-                                                <span className={`order-badge ${txn.orderType === 'Takeout' ? 'badge-takeout' : 'badge-dinein'}`} style={{ opacity: 0.6 }}>
-                                                    {txn.orderType || 'Dine In'}
+                                                <span className={`order-badge ${txn.orderType === 'Dine In' ? 'badge-dinein' : 'badge-takeout'}`} style={{ opacity: 0.6 }}>
+                                                    {txn.orderType}
                                                 </span>
                                             )}
                                         </div>
-                                        <div style={{flex: 1}}><div>{txn.time}</div><div className="text-muted" style={{fontSize: "0.8rem"}}>By: {txn.staff}</div></div>
-                                        <div style={{flex: 2, color: "var(--text-muted)", paddingRight: "20px"}}>{txn.items}</div>
                                         <div style={{flex: 1}}>
-                                            {/* Style payout badge differently */}
+                                            <div>{txn.time}</div>
+                                            <div className="text-muted" style={{fontSize: "0.8rem"}}>Customer: {txn.customerName}</div>
+                                        </div>
+                                        <div style={{flex: 2, color: "var(--text-muted)", paddingRight: "20px"}}>{txn.itemsString}</div>
+                                        <div style={{flex: 1}}>
                                             <span className={`status-badge ${txn.status === 'Completed' ? 'badge-good' : txn.status === 'Payout' ? 'badge-warning' : 'badge-critical'}`}>
                                                 {txn.status}
                                             </span>
                                         </div>
-                                        <div style={{flex: 1, textAlign: "right", fontWeight: "bold", fontSize: "1.1rem", color: txn.status === 'Payout' ? '#ef5350' : 'var(--text-main)'}}>{txn.total}</div>
+                                        <div style={{flex: 1, textAlign: "right", fontWeight: "bold", fontSize: "1.1rem", color: txn.status === 'Payout' ? '#ef5350' : 'var(--text-main)'}}>
+                                            {txn.totalFormatted}
+                                        </div>
                                     </div>
                                 ))
                             )}
@@ -198,22 +227,54 @@ const StaffTransactions = () => {
                         <button className="close-btn" onClick={() => setActiveModal(null)}>✖</button>
                         <div className="receipt-header">
                             <h2>CLUB C.</h2>
-                            <p className="text-muted">Transaction: {selectedTxn.id}</p>
-                            <p className="text-muted">{selectedTxn.time} | Cashier: {selectedTxn.staff}</p>
+                            <p className="text-muted">Transaction: {selectedTxn.receiptId}</p>
+                            <p className="text-muted">{selectedTxn.time} | Customer: {selectedTxn.customerName}</p>
                             {selectedTxn.status !== 'Payout' && (
                                 <p style={{fontWeight: "bold", marginTop: "5px", color: "var(--text-accent)"}}>
-                                    {selectedTxn.orderType ? selectedTxn.orderType.toUpperCase() : 'DINE IN'}
+                                    {selectedTxn.orderType.toUpperCase()}
                                 </p>
                             )}
                         </div>
                         
-                        <div className="receipt-items">
-                            <p>{selectedTxn.items?.split(' | ').map((item, i) => <span key={i} style={{display: "block", marginBottom: "5px"}}>{item}</span>)}</p>
+                        {/* Delivery Address Box (Only shows if Delivery) */}
+                        {selectedTxn.orderType === "Delivery" && (
+                            <div style={{ background: "#252525", padding: "15px", borderRadius: "8px", margin: "15px 0", textAlign: "left", border: "1px solid #333" }}>
+                                <strong style={{ color: "#C8A27C", display: "block", marginBottom: "5px" }}>Delivery Details:</strong>
+                                <div style={{ fontSize: "0.9rem", color: "#ddd" }}>
+                                    <p style={{ margin: "2px 0" }}>📞 {selectedTxn.contactNumber}</p>
+                                    <p style={{ margin: "2px 0" }}>📍 {selectedTxn.address}</p>
+                                    {selectedTxn.landmark && <p style={{ margin: "2px 0", color: "#aaa" }}><em>Landmark: {selectedTxn.landmark}</em></p>}
+                                </div>
+                            </div>
+                        )}
+                        
+                        <div className="receipt-items" style={{ textAlign: "left", marginTop: "15px" }}>
+                            {Array.isArray(selectedTxn.itemsArray) ? selectedTxn.itemsArray.map((item, i) => (
+                                <div key={i} style={{ marginBottom: "10px", borderBottom: "1px dashed #333", paddingBottom: "10px" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                        <strong>{item.quantity || 1}x {item.name}</strong>
+                                        <span>₱{item.total}</span>
+                                    </div>
+                                    {/* Show addons if any exist */}
+                                    {item.addons && item.addons.length > 0 && (
+                                        <div style={{ color: "#aaa", fontSize: "0.8rem", paddingLeft: "20px", marginTop: "4px" }}>
+                                            {item.addons.map((addon, aIdx) => (
+                                                <div key={aIdx}>+ {addon.qty} {addon.name}</div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )) : <p>{selectedTxn.itemsString}</p>}
                         </div>
                         
-                        <div className="receipt-total">
+                        <div className="receipt-total" style={{ display: "flex", justifyContent: "space-between", marginTop: "20px", fontSize: "1.2rem", fontWeight: "bold" }}>
                             <span>Total</span>
-                            <span style={{ color: selectedTxn.status === 'Payout' ? '#ef5350' : 'var(--text-accent)' }}>{selectedTxn.total}</span>
+                            <span style={{ color: selectedTxn.status === 'Payout' ? '#ef5350' : 'var(--text-accent)' }}>
+                                {selectedTxn.totalFormatted}
+                            </span>
+                        </div>
+                        <div style={{ textAlign: "center", color: "#aaa", fontSize: "0.85rem", marginTop: "10px" }}>
+                            Payment Method: {selectedTxn.paymentMethod}
                         </div>
                         
                         <div style={{display: "flex", gap: "10px", marginTop: "20px"}}>
@@ -266,7 +327,7 @@ const StaffTransactions = () => {
                                     <span>₱{dineInRevenue.toFixed(2)}</span>
                                 </div>
                                 <div className="report-row">
-                                    <span>Takeout</span>
+                                    <span>Delivery & Takeout</span>
                                     <span>₱{takeoutRevenue.toFixed(2)}</span>
                                 </div>
                             </div>

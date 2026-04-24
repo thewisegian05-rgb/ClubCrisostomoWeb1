@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/sidebar.jsx';
 import { db } from '../../firebase.js'; 
-import { collection, onSnapshot, doc, setDoc } from 'firebase/firestore'; 
+import { collection, onSnapshot, doc, setDoc, serverTimestamp } from 'firebase/firestore'; 
 import './staffpos.css'; 
 
 const availableAddOns = [
@@ -16,7 +16,6 @@ const StaffPOS = () => {
     const [menuItems, setMenuItems] = useState([]);
 
     useEffect(() => {
-        // Automatically syncs the POS buttons with the Admin Menu!
         const menuCollection = collection(db, 'menu');
         const unsubscribe = onSnapshot(menuCollection, (snapshot) => {
             const menuData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -32,6 +31,15 @@ const StaffPOS = () => {
     // Cart State
     const [cart, setCart] = useState([]);
     const [orderType, setOrderType] = useState('Dine In');
+
+    // --- NOTIFICATION TOAST STATE ---
+    const [notification, setNotification] = useState({ show: false, message: "", isError: false });
+
+    const showNotification = (message, isError = false) => {
+        setNotification({ show: true, message, isError });
+        // Auto-hide after 3 seconds
+        setTimeout(() => setNotification({ show: false, message: "", isError: false }), 3000);
+    };
 
     // --- MODAL STATES ---
     const [activeModalItem, setActiveModalItem] = useState(null);
@@ -100,7 +108,17 @@ const StaffPOS = () => {
         setCart(prevCart => {
             const existingItem = prevCart.find(c => c.cartItemId === cartItemId);
             if (existingItem) return prevCart.map(c => c.cartItemId === cartItemId ? { ...c, quantity: c.quantity + modalQuantity } : c);
-            return [...prevCart, { ...activeModalItem, cartItemId, quantity: modalQuantity, temperature: modalTemperature, addOns: selectedAddOns }];
+            
+            const formattedItem = {
+                ...activeModalItem,
+                cartItemId,
+                quantity: modalQuantity,
+                temperature: modalTemperature,
+                addons: selectedAddOns, 
+                total: getModalItemTotal()
+            };
+            
+            return [...prevCart, formattedItem];
         });
         closeCustomizationModal(); 
     };
@@ -112,7 +130,7 @@ const StaffPOS = () => {
     const removeFromCart = (cartItemId) => setCart(prevCart => prevCart.filter(item => item.cartItemId !== cartItemId));
 
     const handleConfirmOrderClick = () => {
-        if (cart.length === 0) return alert("Cart is empty! Add items before confirming.");
+        if (cart.length === 0) return showNotification("Cart is empty! Add items first.", true);
         setIsPaymentModalOpen(true);
     };
 
@@ -121,74 +139,74 @@ const StaffPOS = () => {
         if (!isPaymentValid) return;
 
         const txnId = `TXN-${Math.floor(1000 + Math.random() * 9000)}`;
+        
         const newTxn = {
-            id: txnId,
+            receiptId: txnId,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            timestamp: new Date().toISOString(), // Great for sorting reports later
+            createdAt: serverTimestamp(),
             orderType: orderType,
-            items: cart.map(item => {
-                const safeName = item.name || "Unnamed Item";
-                const addOnsStr = item.addOns && item.addOns.length > 0 ? ` (+ ${item.addOns.map(a => `${a.qty}x ${a.name}`).join(', ')})` : '';
-                return `${item.quantity}x ${safeName} (${item.temperature})${addOnsStr}`;
-            }).join(' | '),
-            total: totalAmountDue,
-            totalDisplay: `₱${totalAmountDue.toFixed(2)}`,
-            status: "Pending", // <--- THE FIX: This sends it to the Pending queue!
+            items: cart, 
+            totalAmount: totalAmountDue,
+            status: "Pending", 
+            customerName: "Walk-in (POS)",
+            paymentMethod: "Cash",
             staff: "Current User" 
         };
 
         try {
-            // Save order directly to Firebase 'transactions' collection
-            await setDoc(doc(db, 'transactions', txnId), newTxn);
+            await setDoc(doc(db, 'orders', txnId), newTxn);
             
-            alert(`Payment successful!\nTotal: ₱${totalAmountDue.toFixed(2)}\nChange: ₱${changeAmount.toFixed(2)}\nOrder sent to kitchen.`);
+            // Replaced alert with custom toast
+            showNotification(`Payment successful! Change: ₱${changeAmount.toFixed(2)}`);
+            
             setCart([]); 
             setIsPaymentModalOpen(false); 
             setAmountTendered('');
         } catch (error) {
             console.error("Error saving transaction:", error);
-            alert("Failed to process payment. Check connection.");
+            showNotification("Failed to process payment. Check connection.", true);
         }
     };
 
     const handlePayoutSubmit = async () => {
         const amount = parseFloat(payoutAmount);
-        if (!amount || amount <= 0) return alert("Please enter a valid amount.");
+        if (!amount || amount <= 0) return showNotification("Please enter a valid amount.", true);
         
         const finalReason = payoutReason === 'Others' ? payoutOtherReason : payoutReason;
-        if (!finalReason.trim()) return alert("Please specify the reason for payout.");
+        if (!finalReason.trim()) return showNotification("Please specify the reason for payout.", true);
 
         const outId = `OUT-${Math.floor(1000 + Math.random() * 9000)}`;
+        
         const newPayout = {
-            id: outId,
+            receiptId: outId,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            timestamp: new Date().toISOString(),
+            createdAt: serverTimestamp(),
             orderType: 'Payout',
-            items: `CASH PAYOUT: ${finalReason}`,
-            total: -Math.abs(amount), // Negative for reports
-            totalDisplay: `-₱${amount.toFixed(2)}`,
+            items: `CASH PAYOUT: ${finalReason}`, 
+            totalAmount: -Math.abs(amount), 
             status: "Payout", 
+            customerName: "System",
             staff: "Current User" 
         };
 
         try {
-            // Save payout directly to Firebase 'transactions' collection
-            await setDoc(doc(db, 'transactions', outId), newPayout);
+            await setDoc(doc(db, 'orders', outId), newPayout);
 
-            alert(`Payout of ₱${amount.toFixed(2)} recorded for ${finalReason}.`);
+            // Replaced alert with custom toast
+            showNotification(`Payout of ₱${amount.toFixed(2)} recorded.`);
+            
             setIsPayoutModalOpen(false); 
             setPayoutAmount(''); 
             setPayoutReason('Ice cubes'); 
             setPayoutOtherReason('');
         } catch (error) {
             console.error("Error saving payout:", error);
-            alert("Failed to record payout. Check connection.");
+            showNotification("Failed to record payout. Check connection.", true);
         }
     };
 
     const categories = ['All', 'Coffee', 'Non Coffee', 'Refreshers', 'Snacks'];
     
-    // Filter menu logic based on Firebase data
     const filteredMenu = menuItems.filter(item => {
         const categoryMatch = activeCategory === 'All' || item.category === activeCategory;
         const safeName = item.name || ""; 
@@ -198,6 +216,17 @@ const StaffPOS = () => {
 
     return (
         <div className="dashboard-container">
+            
+            {/* --- CUSTOM TOAST NOTIFICATION --- */}
+            {notification.show && (
+                <div className="pos-notification pos-animate-pop">
+                    <div className={`pos-notif-content ${notification.isError ? 'error' : ''}`}>
+                        <span className="pos-notif-icon">{notification.isError ? '!' : '✓'}</span>
+                        {notification.message}
+                    </div>
+                </div>
+            )}
+
             <Sidebar />
             <main className="main-content">
                 
@@ -258,9 +287,9 @@ const StaffPOS = () => {
                                     <div className="cart-item" key={item.cartItemId}>
                                         <div className="cart-item-details">
                                             <h4>{item.name || "Item"} <span style={{fontSize: "0.8rem", color: "var(--text-muted)"}}>({item.temperature})</span></h4>
-                                            {item.addOns && item.addOns.length > 0 && (
+                                            {item.addons && item.addons.length > 0 && (
                                                 <div className="cart-item-addons-list">
-                                                    {item.addOns.map((a, index) => <div key={index} className="cart-item-addon-line">+ {a.qty}x {a.name}</div>)}
+                                                    {item.addons.map((a, index) => <div key={index} className="cart-item-addon-line">+ {a.qty}x {a.name}</div>)}
                                                 </div>
                                             )}
                                             <p>₱{parseFloat(item.price || 0).toFixed(2)} Base</p>
@@ -288,58 +317,64 @@ const StaffPOS = () => {
 
             {/* --- CUSTOMIZATION MODAL --- */}
             {activeModalItem && (
-                <div className="modal-overlay" onClick={closeCustomizationModal}>
-                    <div className="modal-content pos-custom-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header-custom">
-                            <h2>{activeModalItem.name || "Item"}</h2>
-                            <button className="close-btn-custom" onClick={closeCustomizationModal}>✖</button>
+                <div className="pos-modal-overlay show" onClick={closeCustomizationModal}>
+                    <div className="pos-modal-box" onClick={(e) => e.stopPropagation()}>
+                        <button className="pos-close-btn" onClick={closeCustomizationModal}>&times;</button>
+                        <h3 className="pos-modal-title">{activeModalItem.name || "Item"}</h3>
+                        
+                        <div className="pos-temp-selection">
+                            <p>Select Temperature</p>
+                            <div className="pos-temp-toggle">
+                                <span className={`pos-selection-slider ${modalTemperature.toLowerCase()}`}></span>
+                                <button 
+                                    className={`pos-temp-btn ${modalTemperature === 'Hot' ? 'active' : ''}`} 
+                                    onClick={() => setModalTemperature('Hot')}
+                                >Hot</button>
+                                <button 
+                                    className={`pos-temp-btn ${modalTemperature === 'Iced' ? 'active' : ''}`} 
+                                    onClick={() => setModalTemperature('Iced')}
+                                >Iced</button>
+                            </div>
                         </div>
-                        <div className="modal-body-custom">
-                            <div className="form-group" style={{marginBottom: "20px"}}>
-                                <label style={{color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "8px", display: "block"}}>Select Temperature</label>
-                                <div className="temp-toggle-container">
-                                    <button className={modalTemperature === 'Hot' ? 'active' : ''} onClick={() => setModalTemperature('Hot')}>Hot</button>
-                                    <button className={modalTemperature === 'Iced' ? 'active' : ''} onClick={() => setModalTemperature('Iced')}>Iced</button>
-                                </div>
-                            </div>
-                            <div className="addons-section">
-                                <div className="addons-header-row">
-                                    <h3>Add-ons (Extras)</h3>
-                                    <span className="clear-all-btn" onClick={clearAllAddOns}>Clear All</span>
-                                </div>
-                                <div className="addons-list">
-                                    {availableAddOns.map(addon => (
-                                        <div className="addon-row" key={addon.id}>
-                                            <span className="addon-name-txt">{addon.name}</span>
-                                            <div className="addon-controls-wrapper">
-                                                <div className="addon-stepper">
-                                                    <button onClick={() => updateAddOnCount(addon.id, -1)}>−</button>
-                                                    <span>{modalAddOnCounts[addon.id] || 0}</span>
-                                                    <button onClick={() => updateAddOnCount(addon.id, 1)}>+</button>
-                                                </div>
-                                                <span className="addon-price-txt">₱{addon.price}</span>
-                                            </div>
+
+                        <div className="pos-addon-header-row">
+                            <h4>Add-ons (Extras)</h4>
+                            <button className="pos-clear-link" onClick={clearAllAddOns}>Clear All</button>
+                        </div>
+                        
+                        <div className="pos-addons-list">
+                            {availableAddOns.map(addon => (
+                                <div className="pos-addon-row" key={addon.id}>
+                                    <span className="pos-addon-name">{addon.name}</span>
+                                    <div className="pos-addon-controls-wrapper">
+                                        <span className="pos-addon-price">₱{addon.price}</span>
+                                        <div className="pos-qty-controls">
+                                            <button onClick={() => updateAddOnCount(addon.id, -1)}>−</button>
+                                            <span className="pos-count">{modalAddOnCounts[addon.id] || 0}</span>
+                                            <button onClick={() => updateAddOnCount(addon.id, 1)}>+</button>
                                         </div>
-                                    ))}
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="addons-section" style={{marginTop: "20px"}}>
-                                <div className="addon-row" style={{backgroundColor: "var(--input-bg)", border: "1px solid var(--border-color)"}}>
-                                    <span className="addon-name-txt" style={{color: "var(--text-accent)"}}>Item Quantity</span>
-                                    <div className="addon-stepper">
+                            ))}
+                            
+                            <div className="pos-addon-row" style={{ marginTop: '10px', paddingTop: '15px', borderTop: '1px solid #333' }}>
+                                <span className="pos-addon-name" style={{ color: '#C8A27C', fontWeight: '600' }}>Item Quantity</span>
+                                <div className="pos-addon-controls-wrapper">
+                                    <div className="pos-qty-controls">
                                         <button onClick={() => setModalQuantity(Math.max(1, modalQuantity - 1))}>−</button>
-                                        <span>{modalQuantity}</span>
+                                        <span className="pos-count">{modalQuantity}</span>
                                         <button onClick={() => setModalQuantity(modalQuantity + 1)}>+</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="modal-footer-custom">
-                            <div className="modal-total-display">
-                                <span>TOTAL</span>
-                                <div className="total-badge-amount">₱{getModalItemTotal().toFixed(2)}</div>
+
+                        <div className="pos-modal-footer">
+                            <div className="pos-total-display">
+                                <span className="pos-total-label">TOTAL</span>
+                                <strong className="pos-total-amount">₱{getModalItemTotal().toFixed(2)}</strong>
                             </div>
-                            <button className="add-to-cart-btn" onClick={confirmAddToOrder}>Add to Cart</button>
+                            <button className="pos-add-cart-btn" onClick={confirmAddToOrder}>Add to Cart</button>
                         </div>
                     </div>
                 </div>
@@ -347,30 +382,42 @@ const StaffPOS = () => {
 
             {/* --- PAYMENT MODAL --- */}
             {isPaymentModalOpen && (
-                <div className="modal-overlay" onClick={() => setIsPaymentModalOpen(false)}>
-                    <div className="modal-content pos-custom-modal" style={{ width: "400px" }} onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header-custom">
-                            <h2>Complete Payment</h2>
-                            <button className="close-btn-custom" onClick={() => setIsPaymentModalOpen(false)}>✖</button>
+                <div className="pos-modal-overlay show" onClick={() => setIsPaymentModalOpen(false)}>
+                    <div className="pos-modal-box" style={{ width: "400px" }} onClick={(e) => e.stopPropagation()}>
+                        <button className="pos-close-btn" onClick={() => setIsPaymentModalOpen(false)}>&times;</button>
+                        <h3 className="pos-modal-title">Complete Payment</h3>
+                        
+                        <div style={{ textAlign: "center", margin: "25px 0" }}>
+                            <span style={{ color: "#888", fontSize: "0.8rem", letterSpacing: "1px" }}>TOTAL DUE</span>
+                            <h1 style={{ color: "#fff", fontSize: "3rem", margin: "5px 0 0 0" }}>₱{totalAmountDue.toFixed(2)}</h1>
                         </div>
-                        <div className="modal-body-custom" style={{ padding: "20px 30px" }}>
-                            <div style={{ textAlign: "center", marginBottom: "25px" }}>
-                                <span style={{ color: "var(--text-muted)", fontSize: "0.9rem", letterSpacing: "1px" }}>TOTAL DUE</span>
-                                <h1 style={{ color: "var(--text-accent)", fontSize: "3rem", margin: "5px 0 0 0" }}>₱{totalAmountDue.toFixed(2)}</h1>
-                            </div>
-                            <div className="form-group" style={{ marginBottom: "20px" }}>
-                                <label style={{ color: "var(--text-main)", fontSize: "1rem", marginBottom: "10px", textAlign: "center", display: "block" }}>Amount Received</label>
-                                <input type="number" className="payment-input" placeholder="0.00" value={amountTendered} onChange={(e) => setAmountTendered(e.target.value)} autoFocus />
-                            </div>
-                            <div className="change-display-box">
-                                <span className="change-label">Change Due:</span>
-                                <span className="change-amount" style={{ color: changeAmount >= 0 ? "#4caf50" : "#ef5350" }}>
-                                    {amountTendered === '' ? '₱0.00' : `₱${changeAmount > 0 ? changeAmount.toFixed(2) : '0.00'}`}
-                                </span>
-                            </div>
+                        
+                        <div style={{ marginBottom: "20px" }}>
+                            <label style={{ color: "#aaa", fontSize: "0.9rem", marginBottom: "10px", display: "block", textAlign: "center" }}>Amount Received</label>
+                            <input 
+                                type="number" 
+                                className="pos-payment-input" 
+                                placeholder="0.00" 
+                                value={amountTendered} 
+                                onChange={(e) => setAmountTendered(e.target.value)} 
+                                autoFocus 
+                            />
                         </div>
-                        <div className="modal-footer-custom" style={{ justifyContent: "center" }}>
-                            <button className="add-to-cart-btn" style={{ width: "100%", fontSize: "1.2rem", padding: "15px", opacity: isPaymentValid ? 1 : 0.5, cursor: isPaymentValid ? "pointer" : "not-allowed" }} onClick={handleFinalCheckout} disabled={!isPaymentValid}>
+                        
+                        <div className="pos-change-display">
+                            <span>Change Due:</span>
+                            <span style={{ color: changeAmount >= 0 ? "#4caf50" : "#ef5350", fontWeight: "600" }}>
+                                {amountTendered === '' ? '₱0.00' : `₱${changeAmount > 0 ? changeAmount.toFixed(2) : '0.00'}`}
+                            </span>
+                        </div>
+                        
+                        <div className="pos-modal-footer" style={{ borderTop: "none", paddingTop: "0", justifyContent: "center" }}>
+                            <button 
+                                className="pos-add-cart-btn" 
+                                style={{ width: "100%", fontSize: "1.2rem", padding: "15px", opacity: isPaymentValid ? 1 : 0.5, cursor: isPaymentValid ? "pointer" : "not-allowed" }} 
+                                onClick={handleFinalCheckout} 
+                                disabled={!isPaymentValid}
+                            >
                                 Pay ₱{totalAmountDue.toFixed(2)}
                             </button>
                         </div>
@@ -380,53 +427,67 @@ const StaffPOS = () => {
 
             {/* --- PAID OUT (PETTY CASH) MODAL --- */}
             {isPayoutModalOpen && (
-                <div className="modal-overlay" onClick={() => setIsPayoutModalOpen(false)}>
-                    <div className="modal-content pos-custom-modal" style={{ width: "400px" }} onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header-custom">
-                            <h2>💸 Record Expenses</h2>
-                            <button className="close-btn-custom" onClick={() => setIsPayoutModalOpen(false)}>✖</button>
+                <div className="pos-modal-overlay show" onClick={() => setIsPayoutModalOpen(false)}>
+                    <div className="pos-modal-box" style={{ width: "400px" }} onClick={(e) => e.stopPropagation()}>
+                        <button className="pos-close-btn" onClick={() => setIsPayoutModalOpen(false)}>&times;</button>
+                        <h3 className="pos-modal-title">💸 Record Expenses</h3>
+                        
+                        <div style={{ marginBottom: "20px", marginTop: "15px" }}>
+                            <label style={{ color: "#aaa", fontSize: "0.9rem", marginBottom: "10px", display: "block" }}>Amount Taken (₱)</label>
+                            <input 
+                                type="number" 
+                                className="pos-payment-input" 
+                                style={{fontSize: "2rem", padding: "10px", textAlign: "left"}} 
+                                placeholder="0.00" 
+                                value={payoutAmount} 
+                                onChange={(e) => setPayoutAmount(e.target.value)} 
+                                autoFocus 
+                            />
                         </div>
-                        <div className="modal-body-custom" style={{ padding: "20px 30px" }}>
-                            
-                            <div className="form-group" style={{ marginBottom: "20px" }}>
-                                <label style={{ color: "var(--text-main)", fontSize: "1rem", marginBottom: "10px", display: "block" }}>Amount Taken (₱)</label>
-                                <input type="number" className="payment-input" style={{fontSize: "2rem"}} placeholder="0.00" value={payoutAmount} onChange={(e) => setPayoutAmount(e.target.value)} autoFocus />
+
+                        <div style={{ marginBottom: "20px" }}>
+                            <label style={{ color: "#aaa", fontSize: "0.9rem", marginBottom: "10px", display: "block" }}>Reason</label>
+                            <div className="pos-payout-reasons-grid">
+                                {['Ice cubes', 'Water gallons', 'Dish washing', 'Others'].map(reason => (
+                                    <button 
+                                        key={reason} 
+                                        className={`pos-reason-btn ${payoutReason === reason ? 'active' : ''}`}
+                                        onClick={() => setPayoutReason(reason)}
+                                    >
+                                        {reason}
+                                    </button>
+                                ))}
                             </div>
-
-                            <div className="form-group" style={{ marginBottom: "20px" }}>
-                                <label style={{ color: "var(--text-main)", fontSize: "1rem", marginBottom: "10px", display: "block" }}>Reason</label>
-                                <div className="payout-reasons-grid">
-                                    {['Ice cubes', 'Water gallons', 'Dish washing', 'Others'].map(reason => (
-                                        <button 
-                                            key={reason} 
-                                            className={`payout-reason-btn ${payoutReason === reason ? 'active' : ''}`}
-                                            onClick={() => setPayoutReason(reason)}
-                                        >
-                                            {reason}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {payoutReason === 'Others' && (
-                                <div className="form-group">
-                                    <label style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "5px", display: "block" }}>Specify Reason</label>
-                                    <input 
-                                        type="text" 
-                                        className="payment-input" 
-                                        style={{fontSize: "1rem", padding: "12px", textAlign: "left"}}
-                                        placeholder="e.g. Hardware supplies..." 
-                                        value={payoutOtherReason} 
-                                        onChange={(e) => setPayoutOtherReason(e.target.value)} 
-                                    />
-                                </div>
-                            )}
-
                         </div>
-                        <div className="modal-footer-custom" style={{ justifyContent: "center", gap: "10px" }}>
-                            <button className="modal-action-btn outline" style={{flex: 1}} onClick={() => setIsPayoutModalOpen(false)}>Cancel</button>
-                            <button className="add-to-cart-btn" style={{ flex: 1, backgroundColor: "#ef5350", color: "#fff" }} onClick={handlePayoutSubmit}>
-                                Confirm Expense
+
+                        {payoutReason === 'Others' && (
+                            <div style={{ marginBottom: "20px" }}>
+                                <label style={{ color: "#aaa", fontSize: "0.9rem", marginBottom: "5px", display: "block" }}>Specify Reason</label>
+                                <input 
+                                    type="text" 
+                                    className="pos-payment-input" 
+                                    style={{fontSize: "1rem", padding: "12px", textAlign: "left"}}
+                                    placeholder="e.g. Hardware supplies..." 
+                                    value={payoutOtherReason} 
+                                    onChange={(e) => setPayoutOtherReason(e.target.value)} 
+                                />
+                            </div>
+                        )}
+
+                        <div className="pos-modal-footer" style={{ borderTop: "none", paddingTop: "0", gap: "10px", display: "flex" }}>
+                            <button 
+                                className="pos-add-cart-btn" 
+                                style={{ flex: 1, backgroundColor: "transparent", color: "#888", border: "1px solid #444" }} 
+                                onClick={() => setIsPayoutModalOpen(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                className="pos-add-cart-btn" 
+                                style={{ flex: 1, backgroundColor: "#ef5350", color: "#fff" }} 
+                                onClick={handlePayoutSubmit}
+                            >
+                                Confirm
                             </button>
                         </div>
                     </div>

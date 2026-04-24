@@ -2,12 +2,23 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../../Components/PaymentpageComponents/Paymentpage.css";
 
+// IMPORT FIREBASE LOGIC
+import { db } from "../../firebase.jsx"; 
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+
 export default function PaymentPageMain() {
   const [cart, setCart] = useState([]);
   const [total, setTotal] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [showCard, setShowCard] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  
+  // Delivery Details States
+  const [customerName, setCustomerName] = useState("");
+  const [address, setAddress] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [landmark, setLandmark] = useState("");
+  
+  const [isProcessing, setIsProcessing] = useState(false);
   
   // Success Screen States
   const [orderComplete, setOrderComplete] = useState(false);
@@ -19,7 +30,7 @@ export default function PaymentPageMain() {
     const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
     setCart(storedCart);
 
-    // Calculate Grand Total: (Unit Price * Quantity)
+    // Calculate Grand Total
     const computedTotal = storedCart.reduce((acc, item) => {
       return acc + (item.total * (item.quantity || 1));
     }, 0);
@@ -29,28 +40,59 @@ export default function PaymentPageMain() {
 
   const handlePaymentChange = (value) => {
     setPaymentMethod(value);
-    setShowCard(value === "card");
     setShowQR(value === "ewallet");
   };
 
-  const processOrder = () => {
-    // Generate a random Receipt ID (e.g., CC-5421)
+  const processOrder = async () => {
+    if (cart.length === 0) {
+      alert("Your cart is empty!");
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    // Generate a random Receipt ID
     const id = `CC-${Math.floor(1000 + Math.random() * 9000)}`;
-    setReceiptId(id);
     
-    // Show the success screen
-    setOrderComplete(true);
-    
-    // Clear the cart from localStorage
-    localStorage.removeItem("cart");
+    // Build the order package for Firebase with delivery details
+    const newOrder = {
+      receiptId: id,
+      customerName: customerName,
+      address: address,
+      contactNumber: contactNumber,
+      landmark: landmark || "None provided",
+      items: cart,
+      totalAmount: total,
+      paymentMethod: paymentMethod === "cash" ? "Cash" : "E-Wallet",
+      status: "Pending",
+      createdAt: serverTimestamp()
+    };
+
+    try {
+      // Send the order to the "orders" collection in Firestore
+      await addDoc(collection(db, "orders"), newOrder);
+      
+      // Update states to show success screen
+      setReceiptId(id);
+      setOrderComplete(true);
+      
+      // Clear the cart from localStorage
+      localStorage.removeItem("cart");
+    } catch (error) {
+      console.error("Error saving order: ", error);
+      alert("Failed to process order. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!paymentMethod) return alert("Please select a payment method");
+    if (!customerName || !address || !contactNumber) return alert("Please fill in all delivery details");
 
-    // For Counter and Card, we trigger success on submit
-    if (paymentMethod === "counter" || paymentMethod === "card") {
+    // For Cash, trigger processOrder immediately on submit
+    if (paymentMethod === "cash") {
       processOrder();
     }
   };
@@ -58,7 +100,6 @@ export default function PaymentPageMain() {
   return (
     <div className="payment-page">
       {!orderComplete ? (
-        /* --- PAYMENT FORM VIEW --- */
         <div className="payment-container animate-in">
           <div className="payment-header">
             <Link to="/cart" className="back-link">← Back to Cart</Link>
@@ -71,22 +112,59 @@ export default function PaymentPageMain() {
           </div>
 
           <form onSubmit={handleSubmit} className="payment-form">
-            <label className="section-label">Select Payment Method</label>
             
-            <div className="method-grid">
-              <label className={`method-tile ${paymentMethod === "counter" ? "active" : ""}`}>
-                <input type="radio" name="payment" value="counter" onChange={(e) => handlePaymentChange(e.target.value)} />
-                <span className="method-name">Counter</span>
+            {/* Delivery Details Section */}
+            <div className="delivery-details-section">
+              <label className="section-label">Delivery Details</label>
+              
+              <input 
+                type="text" 
+                placeholder="Name" 
+                className="checkout-input"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                required
+              />
+              
+              <input 
+                type="text" 
+                placeholder="Complete Address" 
+                className="checkout-input"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+              />
+              
+              <input 
+                type="tel" 
+                placeholder="Contact Number" 
+                className="checkout-input"
+                value={contactNumber}
+                onChange={(e) => setContactNumber(e.target.value)}
+                required
+              />
+              
+              <input 
+                type="text" 
+                placeholder="Nearest Landmark / Other info (Optional)" 
+                className="checkout-input"
+                value={landmark}
+                onChange={(e) => setLandmark(e.target.value)}
+              />
+            </div>
+
+            {/* Payment Method Section */}
+            <label className="section-label" style={{ marginTop: '20px' }}>Select Payment Method</label>
+            
+            <div className="method-grid-2">
+              <label className={`method-tile ${paymentMethod === "cash" ? "active" : ""}`}>
+                <input type="radio" name="payment" value="cash" onChange={(e) => handlePaymentChange(e.target.value)} />
+                <span className="method-name">Cash</span>
               </label>
 
               <label className={`method-tile ${paymentMethod === "ewallet" ? "active" : ""}`}>
                 <input type="radio" name="payment" value="ewallet" onChange={(e) => handlePaymentChange(e.target.value)} />
                 <span className="method-name">E-Wallet</span>
-              </label>
-
-              <label className={`method-tile ${paymentMethod === "card" ? "active" : ""}`}>
-                <input type="radio" name="payment" value="card" onChange={(e) => handlePaymentChange(e.target.value)} />
-                <span className="method-name">Card</span>
               </label>
             </div>
 
@@ -94,26 +172,20 @@ export default function PaymentPageMain() {
               <div className="qr-section animate-in">
                 <p>Scan to pay via GCash or Maya</p>
                 <img src="/Resources/gcashqr.jpg" alt="QR Code" className="qr-image" />
-                <button type="button" className="verify-btn" onClick={processOrder}>
-                  I have paid
+                <button 
+                  type="button" 
+                  className="verify-btn" 
+                  onClick={processOrder}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? "Processing..." : "I have paid"}
                 </button>
               </div>
             )}
 
-            {showCard && (
-              <div className="card-fields animate-in">
-                <input type="text" placeholder="Cardholder Name" required />
-                <input type="text" placeholder="Card Number" maxLength="16" required />
-                <div className="form-row">
-                  <input type="text" placeholder="MM/YY" maxLength="5" required />
-                  <input type="password" placeholder="CVV" maxLength="3" required />
-                </div>
-              </div>
-            )}
-
-            {(paymentMethod && paymentMethod !== "ewallet") && (
-              <button type="submit" className="pay-btn">
-                Confirm Order
+            {(paymentMethod === "cash") && (
+              <button type="submit" className="pay-btn" disabled={isProcessing}>
+                {isProcessing ? "Processing..." : "Confirm Order"}
               </button>
             )}
           </form>
@@ -123,19 +195,23 @@ export default function PaymentPageMain() {
         <div className="success-container animate-in">
           <div className="success-icon">✓</div>
           <h2>Order Received!</h2>
-          <p>Your caffeine is being prepared.</p>
+          <p>Your caffeine is being prepared for delivery.</p>
           
           <div className="receipt-box">
             <span className="label">Order Number</span>
             <h3 className="order-id">{receiptId}</h3>
             <div className="receipt-details">
               <div className="receipt-row">
-                <span>Total Paid</span>
+                <span>Total Amount</span>
                 <span>₱{total}</span>
               </div>
               <div className="receipt-row">
+                <span>Payment</span>
+                <span style={{ color: '#C8A27C' }}>{paymentMethod === 'cash' ? 'Cash' : 'E-Wallet'}</span>
+              </div>
+              <div className="receipt-row">
                 <span>Status</span>
-                <span className="status-badge">Preparing</span>
+                <span className="status-badge">Pending</span>
               </div>
             </div>
           </div>
