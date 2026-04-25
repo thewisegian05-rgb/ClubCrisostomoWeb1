@@ -68,7 +68,19 @@ const AutoCarousel = ({ items }) => {
   );
 };
 
+const PREFERENCE_GROUPS = {
+  Flavor: ["Sweet", "Bitter", "Mild sweet", "Savory", "Sweet-Sour"],
+  Temperature: ["Hot", "Cold"],
+  Type: ["Coffee", "Non-coffee", "Refreshers", "Snacks"],
+  Ingredients: ["Espresso", "Milk", "Matcha", "Hazelnut", "Chocolate", "Caramel", "Vanilla", "Cinnamon", "Citrus", "Strawberry", "Blueberry", "Berries", "Oreos", "Cereal", "Tea", "Ginger", "Honey", "Potato"]
+};
+
 const HomepageMain = () => {
+  const [selectedPreferences, setSelectedPreferences] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -79,6 +91,54 @@ const HomepageMain = () => {
     document.querySelectorAll(".fade-in").forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
+
+  const togglePreference = (preference) => {
+    setSelectedPreferences((prev) =>
+      prev.includes(preference)
+        ? prev.filter((p) => p !== preference)
+        : [...prev, preference]
+    );
+  };
+
+  const getRecommendations = async () => {
+    if (selectedPreferences.length === 0) {
+      setError("Please select at least one preference");
+      setRecommendations([]);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setRecommendations([]);
+
+    try {
+      const response = await fetch("http://127.0.0.1:5000/recommend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ preferences: selectedPreferences }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get recommendations");
+      }
+
+      const data = await response.json();
+      setRecommendations(data.recommendations || []);
+    } catch (err) {
+      setError("Unable to connect to recommendation service. Make sure Flask is running on localhost:5000");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearPreferences = () => {
+    setSelectedPreferences([]);
+    setRecommendations([]);
+    setError("");
+  };
 
   return (
     <div className="homepage-container">
@@ -92,6 +152,7 @@ const HomepageMain = () => {
         
         <div className="nav-buttons-centered">
           <Link to="/menu" className="nav-link-animated">Full Menu</Link>
+          <a href="#recommendation-section" className="nav-link-animated">Recommendation</a>
           <a href="#footer-info" className="nav-link-animated">Contact</a>
         </div>
 
@@ -120,6 +181,82 @@ const HomepageMain = () => {
           </section>
         ))}
       </main>
+
+      <section className="ContactsPage">
+        <div className="fade-in">
+          <img src="/PHOTO1.jpg" alt="Team" className="GroupPhoto" />
+        </div>
+        <p className="contact-tagline fade-in">Visit us for your daily dose of inspiration.</p>
+      </section>
+
+      <section id="recommendation-section" className="recommendation-section fade-in">
+        <div className="recommendation-container">
+          <h2 className="recommendation-title">Find Your Perfect Drink</h2>
+          <p className="recommendation-subtitle">Select your preferences and we'll recommend the best drinks for you</p>
+
+          <div className="preferences-section">
+            {Object.entries(PREFERENCE_GROUPS).map(([category, options]) => (
+              <div key={category} className="preference-category">
+                <h3 className="category-title">{category}</h3>
+                <div className="button-group">
+                  {options.map((option) => (
+                    <button
+                      key={option}
+                      className={`preference-btn ${
+                        selectedPreferences.includes(option) ? "active" : ""
+                      }`}
+                      onClick={() => togglePreference(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="action-buttons">
+            <button
+              className="get-recommendation-btn"
+              onClick={getRecommendations}
+              disabled={loading}
+            >
+              {loading ? "Loading..." : "Get Recommendation"}
+            </button>
+            <button className="clear-btn" onClick={clearPreferences}>
+              Clear All
+            </button>
+          </div>
+
+          {error && <div className="error-message">{error}</div>}
+
+          {recommendations.length > 0 && (
+            <div className="recommendations-container">
+              <h3>Top 5 Recommended Drinks</h3>
+              <div className="recommendations-grid">
+                {recommendations.map((drink, index) => (
+                  <div key={index} className="recommendation-card">
+                    <div className="card-number">{index + 1}</div>
+                    <div className="card-image-placeholder">
+                      <img
+                        src="/process-preparing-espresso-professional-coffee-machine-closeup.jpg"
+                        alt={drink}
+                      />
+                    </div>
+                    <h4 className="drink-name">{drink}</h4>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {recommendations.length === 0 && !loading && !error && selectedPreferences.length > 0 && (
+            <div className="no-results">
+              Click "Get Recommendation" to see our suggestions based on your preferences
+            </div>
+          )}
+        </div>
+      </section>
 
       <section className="ContactsPage">
         <div className="fade-in">

@@ -1,0 +1,31 @@
+Product,Type,Flavor,Temperature (usual),Contains
+Long Black,Coffee,Bitter,Hot,Espresso;Water
+Cinnamon Latte,Coffee,Sweet,Hot,Espresso;Milk;Cinnamon
+Muscuvado Latte,Coffee,Sweet,Hot,Espresso;Milk;Sugar
+Dirty Matcha,Coffee,Mild sweet,Cold,Espresso;Matcha
+Hazelnut Latte,Coffee,Sweet,Hot,Espresso;Hazelnut;Milk
+Mochaccino,Coffee,Sweet,Hot,Espresso;Chocolate;Milk
+Spanish Latte,Coffee,Sweet,Hot,Espresso;Milk
+Caramel Macchiato,Coffee,Sweet,Cold,Espresso;Vanilla;Caramel
+Citron espresso,Coffee,Mild sweet,Hot,Espresso;Citrus
+Dirty Hazelnut Matcha,Coffee,Sweet,Cold,Espresso;Matcha;Hazelnut
+Chocolate,Non-coffee,Sweet,Cold,Chocolate
+Strawberry,Non-coffee,Sweet,Cold,Strawberry;Milk
+Blueberry,Non-coffee,Sweet,Cold,Blueberry;Milk
+Oreo Matcha,Non-coffee,Sweet,Cold,Matcha;Oreos
+Mixed Berries,Non-coffee,Sweet,Cold,Berries
+Matcha,Non-coffee,Mild Bitter,Hot,Matcha;Milk
+Choco Cereal,Non-coffee,Sweet,Cold,Chocolate;Milk;Cereal
+Berry Matcha,Non-coffee,Sweet,Cold,Matcha;Berries
+Hazelnut Matcha,Non-coffee,Sweet,Cold,Hazelnut;Matcha
+Strawberry Soda,Refreshers,Sweet,Cold,Strawberry
+Blue Lychee Soda,Refreshers,Sweet,Cold,Blue Lychee
+Citron & Ginger Tea,Refreshers,Mild Bitter,Hot,Citrus;Ginger
+Passion Fruit Soda,Refreshers,Sweet,Cold,Passion Fruit
+Calamansi Soda,Refreshers,Sweet-Sour,Cold,Calamansi
+Honey Calamansi,Refreshers,Sweet-Sour,Cold,Calamansi;Honey
+Club Crisostomo Tea,Refreshers,Sweet,Hot,Tea
+Blueberry Toastie,Snacks,Sweet,Hot,Blueberry
+Mozzacheddar Toastie,Snacks,Savory,Hot,Mozzarella;Cheddar
+French Fries,Snacks,Savory,Hot,Potato
+Hashbrowns,Snacks,Savory,Hot,Potato
