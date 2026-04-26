@@ -29,6 +29,61 @@ html { scroll-behavior: smooth; }
     color: #e0e0e0;
 }
 
+.search-bar {
+    max-width: 1200px;
+    margin: 20px auto 0;
+    padding: 0 6%;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-input {
+    width: 100%;
+    max-width: 520px;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    color: #f5f5f5;
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-input:focus {
+    border-color: #C8A27C;
+    box-shadow: 0 0 0 4px rgba(200, 162, 124, 0.12);
+}
+
+.search-clear {
+    background: #C8A27C;
+    color: #111;
+    border: none;
+    border-radius: 999px;
+    padding: 11px 18px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s ease;
+}
+
+.search-clear:hover {
+    background: #e2ba92;
+}
+
+.search-empty {
+    max-width: 1200px;
+    margin: 16px auto 0;
+    padding: 14px 6%;
+    color: #ccc;
+    font-size: 0.95rem;
+    text-align: center;
+    border: 1px solid #2a2a2a;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
 /* --- NAVIGATION --- */
 .navBar {
     position: sticky;

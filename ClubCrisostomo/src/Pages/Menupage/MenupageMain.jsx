@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import "../../Components/MenupageComponents/Menupage.css";
 
@@ -146,6 +146,48 @@ export default function MenupageMain() {
     setTimeout(() => setNotification({ show: false, message: "" }), 3000);
   };
 
+  const normalize = (value) => value?.toLowerCase().trim() || "";
+
+  const sortItemsByName = (items) =>
+    [...items].sort((a, b) => normalize(a.name).localeCompare(normalize(b.name)));
+
+  const binarySearchByName = (sortedItems, query) => {
+    let low = 0;
+    let high = sortedItems.length - 1;
+    const target = normalize(query);
+
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      const midName = normalize(sortedItems[mid].name);
+
+      if (midName === target) return mid;
+      if (midName < target) low = mid + 1;
+      else high = mid - 1;
+    }
+
+    return -1;
+  };
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const allMenuItems = useMemo(() => Object.values(menuData).flat(), [menuData]);
+  const sortedMenuItems = useMemo(() => sortItemsByName(allMenuItems), [allMenuItems]);
+
+  const searchResults = useMemo(() => {
+    if (!searchTerm.trim()) return [];
+
+    const exactIndex = binarySearchByName(sortedMenuItems, searchTerm);
+    if (exactIndex !== -1) return [sortedMenuItems[exactIndex]];
+
+    return sortedMenuItems.filter((item) =>
+      normalize(item.name).includes(normalize(searchTerm))
+    );
+  }, [searchTerm, sortedMenuItems]);
+
+  const activeMenuData = searchTerm.trim()
+    ? { "Search Results": searchResults }
+    : menuData;
+
   return (
     <div className="menu-page">
       {notification.show && (
@@ -184,19 +226,42 @@ export default function MenupageMain() {
         <h2>Crafted with care, brewed with passion.</h2>
       </header>
 
+      <div className="search-bar">
+        <input
+          type="search"
+          className="search-input"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search menu by name"
+          aria-label="Search menu"
+        />
+        {searchTerm && (
+          <button className="search-clear" onClick={() => setSearchTerm("")}>Clear</button>
+        )}
+      </div>
+
+      {searchTerm.trim() && searchResults.length === 0 && (
+        <div className="search-empty">No menu items match “{searchTerm}”.</div>
+      )}
+
       {/* --- 4. RENDER LIVE FIREBASE DATA --- */}
-      {Object.entries(menuData).map(([sectionKey, items]) => {
+      {Object.entries(activeMenuData).map(([sectionKey, items]) => {
         // Skip rendering the section entirely if the admin hasn't added any items to it yet
         if (items.length === 0) return null;
 
+        const isSearchSection = sectionKey === "Search Results";
         const isExpanded = expandedSections[sectionKey];
         const visibleItems = isExpanded ? items : items.slice(0, 6);
 
         return (
           <section key={sectionKey} id={sectionKey} className="menu-section">
-            <h3 className="section-title">{sectionKey.toUpperCase()} FAVES</h3>
+            <h3 className="section-title">
+              {isSearchSection ? sectionKey : `${sectionKey.toUpperCase()} FAVES`}
+            </h3>
             
-            <AutoCarousel items={items.slice(0, 5)} onCardClick={openModal} />
+            {!isSearchSection && (
+              <AutoCarousel items={items.slice(0, 5)} onCardClick={openModal} />
+            )}
 
             <div className="menu-grid">
               {visibleItems.map((item, idx) => (
@@ -215,7 +280,7 @@ export default function MenupageMain() {
                 </div>
               ))}
             </div>
-            {items.length > 6 && (
+            {!isSearchSection && items.length > 6 && (
               <button className="toggle-btn" onClick={() => setExpandedSections(prev => ({...prev, [sectionKey]: !prev[sectionKey]}))}>
                 {isExpanded ? "Show Less" : "View Full Menu"}
               </button>
