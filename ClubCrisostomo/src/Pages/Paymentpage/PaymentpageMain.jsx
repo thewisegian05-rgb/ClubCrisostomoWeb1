@@ -53,10 +53,14 @@ export default function PaymentPageMain() {
     
     // Generate a random Receipt ID
     const id = `CC-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // Grab the logged-in user's secret ID
+    const uid = localStorage.getItem("userUID") || "guest";
     
     // Build the order package for Firebase with delivery details
     const newOrder = {
       receiptId: id,
+      userId: uid,
       customerName: customerName,
       address: address,
       contactNumber: contactNumber,
@@ -69,8 +73,8 @@ export default function PaymentPageMain() {
     };
 
     try {
-      // Send the order to the "orders" collection in Firestore
-      await addDoc(collection(db, "orders"), newOrder);
+      // Sent to the global "transactions" folder for Staff to see
+      await addDoc(collection(db, "transactions"), newOrder);
       
       // Update states to show success screen
       setReceiptId(id);
@@ -216,8 +220,9 @@ export default function PaymentPageMain() {
             </div>
           </div>
 
-          <button className="done-btn" onClick={() => navigate("/menu")}>
-            Back to Menu
+          {/* --- THE ROUTING UPDATE --- */}
+          <button className="done-btn" onClick={() => navigate("/")}>
+            Back to Home
           </button>
         </div>
       )}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Added useNavigate
 import "../../Components/HomepageComponents/Homepage.css";
 
 const MENU_DATA = [
@@ -80,7 +80,21 @@ const HomepageMain = () => {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // New States for Login / Dropdown
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const navigate = useNavigate();
 
+  // Check login status on load
+  useEffect(() => {
+    const loggedInStatus = localStorage.getItem("isLoggedIn");
+    if (loggedInStatus === "true") {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  // Handle intersection observer animations
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -91,6 +105,13 @@ const HomepageMain = () => {
     document.querySelectorAll(".fade-in").forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false);
+    setShowDropdown(false);
+    navigate("/");
+  };
 
   const togglePreference = (preference) => {
     setSelectedPreferences((prev) =>
@@ -142,7 +163,6 @@ const HomepageMain = () => {
 
   return (
     <div className="homepage-container">
-      {/* UPDATED NAV BAR FOR CENTERING & CLICKABLE LOGO */}
       <nav className="navBar">
         <div className="nav-left">
           <Link to="/" className="logo-link">
@@ -157,7 +177,27 @@ const HomepageMain = () => {
         </div>
 
         <div className="nav-right">
-           {/* Spacer to maintain center alignment */}
+          {/* Conditional Rendering for Login vs Profile Burger Menu */}
+          {isLoggedIn ? (
+            <div className="profile-menu-container">
+              <button 
+                className="burger-btn" 
+                onClick={() => setShowDropdown(!showDropdown)}
+              >
+                ☰
+              </button>
+
+              {showDropdown && (
+                <div className="dropdown-menu fade-in-dropdown">
+                  <Link to="/profile" className="dropdown-item">My Profile</Link>
+                  <div className="dropdown-divider"></div>
+                  <button onClick={handleLogout} className="dropdown-item logout-item">Logout</button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link to="/login" className="login-btn">Login</Link>
+          )}
         </div>
       </nav>
 
@@ -181,13 +221,6 @@ const HomepageMain = () => {
           </section>
         ))}
       </main>
-
-      <section className="ContactsPage">
-        <div className="fade-in">
-          <img src="/PHOTO1.jpg" alt="Team" className="GroupPhoto" />
-        </div>
-        <p className="contact-tagline fade-in">Visit us for your daily dose of inspiration.</p>
-      </section>
 
       <section id="recommendation-section" className="recommendation-section fade-in">
         <div className="recommendation-container">
