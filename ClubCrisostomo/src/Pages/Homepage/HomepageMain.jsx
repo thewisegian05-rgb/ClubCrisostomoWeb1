@@ -224,8 +224,8 @@ const HomepageMain = () => {
 
       <section id="recommendation-section" className="recommendation-section fade-in">
         <div className="recommendation-container">
-          <h2 className="recommendation-title">Find Your Perfect Drink</h2>
-          <p className="recommendation-subtitle">Select your preferences and we'll recommend the best drinks for you</p>
+          <h2 className="recommendation-title">Find Your Perfect Product</h2>
+          <p className="recommendation-subtitle">Select your preferences and we'll recommend the best products for you</p>
 
           <div className="preferences-section">
             {Object.entries(PREFERENCE_GROUPS).map(([category, options]) => (
@@ -265,7 +265,7 @@ const HomepageMain = () => {
 
           {recommendations.length > 0 && (
             <div className="recommendations-container">
-              <h3>Top 5 Recommended Drinks</h3>
+              <h3>Top 5 Recommended Products</h3>
               <div className="recommendations-grid">
                 {recommendations.map((drink, index) => (
                   <div key={index} className="recommendation-card">
