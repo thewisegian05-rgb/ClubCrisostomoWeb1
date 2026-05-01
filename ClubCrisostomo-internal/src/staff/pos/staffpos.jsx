@@ -15,6 +15,10 @@ const StaffPOS = () => {
     // --- 1. CLOUD STATE (MENU) ---
     const [menuItems, setMenuItems] = useState([]);
 
+    // --- POS WORKFLOW SETTINGS ---
+    // Read directly from localStorage on load so it applies instantly
+    const [viewMode, setViewMode] = useState(localStorage.getItem('pos_menu_view') || 'Grid View (Images)');
+
     useEffect(() => {
         const menuCollection = collection(db, 'menu');
         const unsubscribe = onSnapshot(menuCollection, (snapshot) => {
@@ -37,7 +41,6 @@ const StaffPOS = () => {
 
     const showNotification = (message, isError = false) => {
         setNotification({ show: true, message, isError });
-        // Auto-hide after 3 seconds
         setTimeout(() => setNotification({ show: false, message: "", isError: false }), 3000);
     };
 
@@ -134,7 +137,6 @@ const StaffPOS = () => {
         setIsPaymentModalOpen(true);
     };
 
-    // --- 2. CLOUD SAVING (TRANSACTIONS) ---
     const handleFinalCheckout = async () => {
         if (!isPaymentValid) return;
 
@@ -156,7 +158,6 @@ const StaffPOS = () => {
         try {
             await setDoc(doc(db, 'orders', txnId), newTxn);
             
-            // Replaced alert with custom toast
             showNotification(`Payment successful! Change: ₱${changeAmount.toFixed(2)}`);
             
             setCart([]); 
@@ -192,7 +193,6 @@ const StaffPOS = () => {
         try {
             await setDoc(doc(db, 'orders', outId), newPayout);
 
-            // Replaced alert with custom toast
             showNotification(`Payout of ₱${amount.toFixed(2)} recorded.`);
             
             setIsPayoutModalOpen(false); 
@@ -217,7 +217,6 @@ const StaffPOS = () => {
     return (
         <div className="dashboard-container">
             
-            {/* --- CUSTOM TOAST NOTIFICATION --- */}
             {notification.show && (
                 <div className="pos-notification pos-animate-pop">
                     <div className={`pos-notif-content ${notification.isError ? 'error' : ''}`}>
@@ -251,22 +250,34 @@ const StaffPOS = () => {
                             ))}
                         </div>
 
-                        <div className="pos-grid">
+                        {/* --- DYNAMIC MENU VIEW RENDERING --- */}
+                        <div className={viewMode === 'List View (Text)' ? "pos-list-view" : "pos-grid"}>
                             {filteredMenu.length === 0 ? (
                                 <div style={{gridColumn: "1 / -1", textAlign: "center", padding: "40px", color: "var(--text-muted)"}}>
                                     No active menu items found. Add them in the Admin Panel!
                                 </div>
                             ) : (
                                 filteredMenu.map(item => (
-                                    <div className="pos-item-card" key={item.id} onClick={() => openCustomizationModal(item)}>
-                                        <div className="item-image-placeholder">
-                                            <span>{item.name ? item.name.charAt(0) : '?'}</span>
+                                    viewMode === 'List View (Text)' ? (
+                                        // LIST VIEW LAYOUT
+                                        <div className="pos-list-item-card" key={item.id} onClick={() => openCustomizationModal(item)}>
+                                            <div className="item-info-row">
+                                                <h4>{item.name || "Unnamed Item"}</h4>
+                                                <p>₱{parseFloat(item.price || 0).toFixed(2)}</p>
+                                            </div>
                                         </div>
-                                        <div className="item-info">
-                                            <h4>{item.name || "Unnamed Item"}</h4>
-                                            <p>₱{parseFloat(item.price || 0).toFixed(2)}</p>
+                                    ) : (
+                                        // DEFAULT GRID VIEW LAYOUT
+                                        <div className="pos-item-card" key={item.id} onClick={() => openCustomizationModal(item)}>
+                                            <div className="item-image-placeholder">
+                                                <span>{item.name ? item.name.charAt(0) : '?'}</span>
+                                            </div>
+                                            <div className="item-info">
+                                                <h4>{item.name || "Unnamed Item"}</h4>
+                                                <p>₱{parseFloat(item.price || 0).toFixed(2)}</p>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )
                                 ))
                             )}
                         </div>

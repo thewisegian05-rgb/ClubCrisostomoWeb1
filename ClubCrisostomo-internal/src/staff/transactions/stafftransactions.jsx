@@ -14,31 +14,28 @@ const StaffTransactions = () => {
 
     // Fetch data from Firebase in real-time
     useEffect(() => {
-        // FIXED: Changed 'transactions' to 'orders' to match the customer app!
         const txnsCollectionRef = collection(db, 'orders'); 
         
         const unsubscribe = onSnapshot(txnsCollectionRef, (snapshot) => {
             const txnsData = snapshot.docs.map(doc => {
                 const data = doc.data();
                 
-                // Format the items array into a readable string for the table view
                 const itemsSummary = Array.isArray(data.items) 
                     ? data.items.map(item => `${item.quantity || 1}x ${item.name}`).join(', ')
                     : data.items || "No items";
 
-                // Format the Firestore timestamp to a readable clock time
                 const timeString = data.createdAt?.toDate 
                     ? data.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
                     : "Just now";
 
                 return {
-                    id: doc.id, // Firebase doc ID (used for updating status)
-                    receiptId: data.receiptId || doc.id, // Display ID
+                    id: doc.id,
+                    receiptId: data.receiptId || doc.id, 
                     time: timeString,
                     customerName: data.customerName || "Walk-in",
-                    itemsString: itemsSummary, // For table summary
-                    itemsArray: data.items || [], // For receipt modal
-                    totalAmount: parseFloat(data.totalAmount || 0), // Use numbers for math
+                    itemsString: itemsSummary, 
+                    itemsArray: data.items || [], 
+                    totalAmount: parseFloat(data.totalAmount || 0), 
                     totalFormatted: `₱${parseFloat(data.totalAmount || 0).toFixed(2)}`,
                     status: data.status || "Pending",
                     orderType: data.address ? "Delivery" : (data.tableNumber ? "Dine In" : "Takeout"),
@@ -46,6 +43,8 @@ const StaffTransactions = () => {
                     address: data.address || "",
                     contactNumber: data.contactNumber || "",
                     landmark: data.landmark || "",
+                    // Add createdAt for accurate FIFO sorting
+                    createdAt: data.createdAt?.toMillis() || 0,
                     ...data
                 };
             });
@@ -61,7 +60,6 @@ const StaffTransactions = () => {
     const changeStatus = async (e, id, newStatus) => {
         e.stopPropagation();
         try {
-            // FIXED: Changed 'transactions' to 'orders' here too!
             const txnDocRef = doc(db, 'orders', id);
             await updateDoc(txnDocRef, { status: newStatus });
         } catch (error) {
@@ -75,10 +73,44 @@ const StaffTransactions = () => {
         setActiveModal("receipt");
     };
 
-    // Filter Queues
-    const pendingTxns = transactions.filter(t => t.status === 'Pending');
-    const preparingTxns = transactions.filter(t => t.status === 'Preparing');
-    const historyTxns = transactions.filter(t => ['Completed', 'Voided', 'Payout'].includes(t.status));
+    // --- FILTER QUEUES BASED ON NEW LOGIC ---
+    const pendingTxns = transactions.filter(t => t.status === 'Pending'); 
+    
+    // Split Pending into Priority (Delivery & Takeout) and Others (Dine In) 
+    // AND apply FIFO sorting (oldest first)
+    const priorityOrders = pendingTxns
+        .filter(t => t.orderType === 'Delivery' || t.orderType === 'Takeout')
+        .sort((a, b) => a.createdAt - b.createdAt); // FIFO
+
+    const standardPending = pendingTxns
+        .filter(t => t.orderType !== 'Delivery' && t.orderType !== 'Takeout')
+        .sort((a, b) => a.createdAt - b.createdAt); // FIFO
+    
+    // --- UPDATED PREPARING QUEUE LOGIC ---
+    const preparingTxnsUnsorted = transactions.filter(t => t.status === 'Preparing'); 
+    
+    // Sort preparingTxns: 
+    // 1. Prioritize Delivery/Takeout over Dine In
+    // 2. Then apply FIFO based on createdAt
+    const preparingTxns = [...preparingTxnsUnsorted].sort((a, b) => {
+        const isAPriority = a.orderType === 'Delivery' || a.orderType === 'Takeout';
+        const isBPriority = b.orderType === 'Delivery' || b.orderType === 'Takeout';
+
+        if (isAPriority && !isBPriority) {
+            return -1; // a comes first
+        }
+        if (!isAPriority && isBPriority) {
+            return 1;  // b comes first
+        }
+        
+        // If both are the same priority level, sort by time (FIFO)
+        return a.createdAt - b.createdAt; 
+    });
+    
+    // History queue - Sorted newest to oldest (Reverse FIFO)
+    const historyTxns = transactions
+        .filter(t => ['To Receive', 'Completed', 'Voided', 'Payout'].includes(t.status))
+        .sort((a, b) => b.createdAt - a.createdAt);
 
     // --- END OF SHIFT TALLY CALCULATIONS ---
     const completedTxns = historyTxns.filter(t => t.status === 'Completed');
@@ -106,21 +138,23 @@ const StaffTransactions = () => {
                 </header>
 
                 <div className="transactions-layout">
-                    
-                    {/* --- 1. PENDING QUEUE --- */}
-                    <div className="widget" style={{ padding: 0, overflow: "hidden", marginBottom: "20px" }}>
-                        <div style={{ padding: "15px 20px", backgroundColor: "rgba(239, 83, 80, 0.1)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                            <h2 style={{ margin: 0, color: "#ef5350", fontSize: "1.2rem" }}>🚨 New Orders (Pending)</h2>
-                        </div>
-                        <div className="table-header">
-                            <div style={{flex: 1}}>Receipt ID</div>
-                            <div style={{flex: 1}}>Time / Customer</div>
-                            <div style={{flex: 2}}>Items Summary</div>
-                            <div style={{flex: 1, textAlign: "center"}}>Actions</div>
-                        </div>
-                        <div className="table-body">
-                            {pendingTxns.length === 0 ? <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)" }}>No pending orders.</div> : (
-                                pendingTxns.map(txn => (
+
+                    {/* --- PRIORITY ALERT: PENDING DELIVERIES & TAKEOUT --- */}
+                    {priorityOrders.length > 0 && (
+                        <div className="widget" style={{ padding: 0, overflow: "hidden", marginBottom: "20px", border: "1px solid #C8A27C", backgroundColor: "rgba(200, 162, 124, 0.05)" }}>
+                            <div style={{ padding: "15px 20px", borderBottom: "1px solid rgba(200, 162, 124, 0.2)" }}>
+                                <h2 style={{ margin: 0, color: "#C8A27C", fontSize: "1.2rem", display: "flex", alignItems: "center", gap: "8px" }}>
+                                    ⚠️ PRIORITY ORDERS ({priorityOrders.length})
+                                </h2>
+                            </div>
+                            <div className="table-header" style={{ opacity: 0.8 }}>
+                                <div style={{flex: 1}}>Receipt ID</div>
+                                <div style={{flex: 1}}>Time / Customer</div>
+                                <div style={{flex: 2}}>Items Summary</div>
+                                <div style={{flex: 1, textAlign: "center"}}>Actions</div>
+                            </div>
+                            <div className="table-body">
+                                {priorityOrders.map(txn => (
                                     <div className="table-row clickable-row" key={txn.id} onClick={() => handleViewReceipt(txn)}>
                                         <div style={{flex: 1}}>
                                             <div style={{color: "var(--text-accent)", fontWeight: "bold"}}>{txn.receiptId}</div>
@@ -132,8 +166,42 @@ const StaffTransactions = () => {
                                         </div>
                                         <div style={{flex: 2, color: "var(--text-muted)", paddingRight: "20px"}}>{txn.itemsString}</div>
                                         <div style={{flex: 1, display: "flex", gap: "8px", justifyContent: "center"}}>
-                                            <button className="prepare-btn" onClick={(e) => changeStatus(e, txn.id, 'Preparing')}>Prepare</button>
-                                            <button className="void-btn" onClick={(e) => changeStatus(e, txn.id, 'Voided')}>Void</button>
+                                            <button className="prepare-btn" style={{borderColor: '#C8A27C', color: '#C8A27C'}} onClick={(e) => changeStatus(e, txn.id, 'Preparing')}>Accept</button>
+                                            <button className="void-btn" onClick={(e) => changeStatus(e, txn.id, 'Voided')}>Decline</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* --- 1. PENDING APPROVAL QUEUE (DINE IN) --- */}
+                    <div className="widget" style={{ padding: 0, overflow: "hidden", marginBottom: "20px" }}>
+                        <div style={{ padding: "15px 20px", backgroundColor: "rgba(239, 83, 80, 0.1)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                            <h2 style={{ margin: 0, color: "#ef5350", fontSize: "1.2rem" }}>🚨 Pending Approval (Dine-In)</h2>
+                        </div>
+                        <div className="table-header">
+                            <div style={{flex: 1}}>Receipt ID</div>
+                            <div style={{flex: 1}}>Time / Customer</div>
+                            <div style={{flex: 2}}>Items Summary</div>
+                            <div style={{flex: 1, textAlign: "center"}}>Actions</div>
+                        </div>
+                        <div className="table-body">
+                            {standardPending.length === 0 ? <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)" }}>No pending orders.</div> : (
+                                standardPending.map(txn => (
+                                    <div className="table-row clickable-row" key={txn.id} onClick={() => handleViewReceipt(txn)}>
+                                        <div style={{flex: 1}}>
+                                            <div style={{color: "var(--text-accent)", fontWeight: "bold"}}>{txn.receiptId}</div>
+                                            <span className={`order-badge ${txn.orderType === 'Dine In' ? 'badge-dinein' : 'badge-takeout'}`}>{txn.orderType}</span>
+                                        </div>
+                                        <div style={{flex: 1}}>
+                                            <div>{txn.time}</div>
+                                            <div className="text-muted" style={{fontSize: "0.8rem"}}>Customer: {txn.customerName}</div>
+                                        </div>
+                                        <div style={{flex: 2, color: "var(--text-muted)", paddingRight: "20px"}}>{txn.itemsString}</div>
+                                        <div style={{flex: 1, display: "flex", gap: "8px", justifyContent: "center"}}>
+                                            <button className="prepare-btn" onClick={(e) => changeStatus(e, txn.id, 'Preparing')}>Accept</button>
+                                            <button className="void-btn" onClick={(e) => changeStatus(e, txn.id, 'Voided')}>Decline</button>
                                         </div>
                                     </div>
                                 ))
@@ -144,7 +212,7 @@ const StaffTransactions = () => {
                     {/* --- 2. NOW PREPARING --- */}
                     <div className="widget" style={{ padding: 0, overflow: "hidden", marginBottom: "20px" }}>
                         <div style={{ padding: "15px 20px", backgroundColor: "rgba(212, 163, 115, 0.1)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                            <h2 style={{ margin: 0, color: "var(--text-accent)", fontSize: "1.2rem" }}>👨‍🍳 Now Preparing</h2>
+                            <h2 style={{ margin: 0, color: "var(--text-accent)", fontSize: "1.2rem" }}>👨‍🍳 Now Preparing (To Ship)</h2>
                         </div>
                         <div className="table-header">
                             <div style={{flex: 1}}>Receipt ID</div>
@@ -166,7 +234,7 @@ const StaffTransactions = () => {
                                         </div>
                                         <div style={{flex: 2, color: "var(--text-muted)", paddingRight: "20px"}}>{txn.itemsString}</div>
                                         <div style={{flex: 1, display: "flex", justifyContent: "center"}}>
-                                            <button className="complete-btn" onClick={(e) => changeStatus(e, txn.id, 'Completed')}>Done</button>
+                                            <button className="complete-btn" onClick={(e) => changeStatus(e, txn.id, 'To Receive')}>Done Preparing</button>
                                         </div>
                                     </div>
                                 ))
@@ -177,7 +245,7 @@ const StaffTransactions = () => {
                     {/* --- 3. HISTORY --- */}
                     <div className="widget" style={{ padding: 0, overflow: "hidden" }}>
                         <div style={{ padding: "15px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                            <h2 style={{ margin: 0, fontSize: "1.2rem" }}>Transaction History</h2>
+                            <h2 style={{ margin: 0, fontSize: "1.2rem" }}>Transaction History & Fulfillment</h2>
                         </div>
                         <div className="table-header">
                             <div style={{flex: 1}}>Receipt ID</div>
@@ -203,11 +271,22 @@ const StaffTransactions = () => {
                                             <div className="text-muted" style={{fontSize: "0.8rem"}}>Customer: {txn.customerName}</div>
                                         </div>
                                         <div style={{flex: 2, color: "var(--text-muted)", paddingRight: "20px"}}>{txn.itemsString}</div>
-                                        <div style={{flex: 1}}>
-                                            <span className={`status-badge ${txn.status === 'Completed' ? 'badge-good' : txn.status === 'Payout' ? 'badge-warning' : 'badge-critical'}`}>
+                                        
+                                        <div style={{flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start'}}>
+                                            <span className={`status-badge ${txn.status === 'Completed' ? 'badge-good' : txn.status === 'To Receive' ? 'badge-warning' : 'badge-critical'}`}>
                                                 {txn.status}
                                             </span>
+                                            {/* Safety fail-safe: If customer forgets to click "Received", Staff can force it to Completed */}
+                                            {txn.status === 'To Receive' && (
+                                                <button 
+                                                    onClick={(e) => changeStatus(e, txn.id, 'Completed')} 
+                                                    style={{ marginTop: '5px', background: 'none', border: '1px solid #4caf50', color: '#4caf50', borderRadius: '4px', fontSize: '0.7rem', padding: '2px 5px', cursor: 'pointer'}}
+                                                >
+                                                    Force Complete
+                                                </button>
+                                            )}
                                         </div>
+
                                         <div style={{flex: 1, textAlign: "right", fontWeight: "bold", fontSize: "1.1rem", color: txn.status === 'Payout' ? '#ef5350' : 'var(--text-main)'}}>
                                             {txn.totalFormatted}
                                         </div>
@@ -236,7 +315,6 @@ const StaffTransactions = () => {
                             )}
                         </div>
                         
-                        {/* Delivery Address Box (Only shows if Delivery) */}
                         {selectedTxn.orderType === "Delivery" && (
                             <div style={{ background: "#252525", padding: "15px", borderRadius: "8px", margin: "15px 0", textAlign: "left", border: "1px solid #333" }}>
                                 <strong style={{ color: "#C8A27C", display: "block", marginBottom: "5px" }}>Delivery Details:</strong>
@@ -255,7 +333,6 @@ const StaffTransactions = () => {
                                         <strong>{item.quantity || 1}x {item.name}</strong>
                                         <span>₱{item.total}</span>
                                     </div>
-                                    {/* Show addons if any exist */}
                                     {item.addons && item.addons.length > 0 && (
                                         <div style={{ color: "#aaa", fontSize: "0.8rem", paddingLeft: "20px", marginTop: "4px" }}>
                                             {item.addons.map((addon, aIdx) => (
@@ -296,14 +373,11 @@ const StaffTransactions = () => {
                         </div>
 
                         <div className="report-body">
-                            
-                            {/* Expected Cash in Drawer */}
                             <div className="report-section summary-box" style={{backgroundColor: "rgba(200, 162, 124, 0.1)", borderColor: "var(--text-accent)"}}>
                                 <h3 style={{ color: "var(--text-accent)", marginBottom: "10px" }}>Expected Cash In Drawer</h3>
                                 <div className="report-huge-total" style={{color: "var(--text-accent)"}}>₱{expectedCashInDrawer.toFixed(2)}</div>
                             </div>
 
-                            {/* Sales & Payouts Breakdown */}
                             <div className="report-section">
                                 <div className="report-row">
                                     <span>Total Gross Sales</span>
@@ -319,7 +393,6 @@ const StaffTransactions = () => {
                                 </div>
                             </div>
 
-                            {/* Revenue Breakdown */}
                             <div className="report-section">
                                 <h3 style={{ color: "var(--text-accent)", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "8px", marginBottom: "10px", fontSize: "0.9rem" }}>Sales Breakdown</h3>
                                 <div className="report-row">
@@ -332,7 +405,6 @@ const StaffTransactions = () => {
                                 </div>
                             </div>
 
-                            {/* Voided Details */}
                             <div className="report-section" style={{ backgroundColor: "rgba(239, 83, 80, 0.05)", padding: "10px 15px", borderRadius: "8px", border: "1px solid rgba(239, 83, 80, 0.2)" }}>
                                 <div className="report-row" style={{padding: 0}}>
                                     <span style={{ color: "#ef5350", fontSize: "0.9rem" }}>Voided Revenue</span>

@@ -13,6 +13,29 @@
     cursor: not-allowed;
 }
 
+/* --- FIXED DROPDOWN (SELECT) STYLING --- */
+select.form-input {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 8px 12px;
+    border-radius: 6px;
+    outline: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+select.form-input:focus {
+    border-color: var(--text-accent);
+}
+
+select.form-input option {
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+
 .preference-item {
     display: flex;
     justify-content: space-between;
@@ -105,10 +128,38 @@ body.light-theme .form-input {
     color: #333333;
     border: 1px solid #cccccc;
 }
+body.light-theme select.form-input {
+    background-color: #ffffff;
+    color: #333333;
+    border: 1px solid #cccccc;
+}
+body.light-theme select.form-input option {
+    background-color: #ffffff;
+    color: #333333;
+}
 body.light-theme .preference-item {
     border-bottom: 1px solid #eeeeee;
 }
 body.light-theme .form-input:disabled {
     background-color: #e9ecef;
     color: #6c757d;
+}
+
+/* --- HEALTH & ERGONOMICS OVERRIDES --- */
+
+/* Eye-Care Mode (Blue Light Filter) */
+/* Applies a warm, sepia-toned filter to the entire app to reduce blue light */
+body.eye-care-mode {
+    filter: sepia(0.35) brightness(0.9) contrast(0.95);
+    background-color: #1a1614; 
+}
+
+/* Reduce UI Motion */
+/* Strips out all sliding, bouncing, and fading animations across the app */
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
 }

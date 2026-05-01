@@ -40,19 +40,42 @@ const StaffDashboard = () => {
   };
 
   useEffect(() => {
-      // 1. Process Transactions from Firebase (Real-time)
-      const txnsCollectionRef = collection(db, 'transactions');
+      // 1. Process Orders from Firebase (Real-time) - CHANGED TO 'orders'
+      const txnsCollectionRef = collection(db, 'orders');
       const unsubscribeTxns = onSnapshot(txnsCollectionRef, (snapshot) => {
-          const parsedTxns = snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-          }));
+          const parsedTxns = snapshot.docs.map(doc => {
+              const data = doc.data();
+              
+              // Sync formatting with StaffTransactions
+              const itemsSummary = Array.isArray(data.items) 
+                  ? data.items.map(item => `${item.quantity || 1}x ${item.name}`).join(', ')
+                  : data.items || "No items";
+
+              const timeString = data.createdAt?.toDate 
+                  ? data.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                  : "Just now";
+
+              return {
+                  id: doc.id,
+                  receiptId: data.receiptId || doc.id,
+                  time: timeString,
+                  itemsString: itemsSummary,
+                  status: data.status || "Pending",
+                  createdAt: data.createdAt?.toMillis() || 0,
+                  ...data
+              };
+          });
+
           const pending = parsedTxns.filter(t => t.status === 'Pending');
           const preparing = parsedTxns.filter(t => t.status === 'Preparing');
           
           setPendingCount(pending.length);
           setPreparingCount(preparing.length);
-          setActiveOrdersList([...pending, ...preparing]);
+          
+          // Combine and sort by oldest first (FIFO)
+          const combinedActive = [...pending, ...preparing].sort((a, b) => a.createdAt - b.createdAt);
+          setActiveOrdersList(combinedActive);
+          
       }, (error) => {
           console.error("Error fetching transactions for dashboard: ", error);
       });
@@ -99,6 +122,7 @@ const StaffDashboard = () => {
     if (status === "Active") color = "#81c784";
     if (status === "On Break" || status === "Break") color = "#fbc02d";
     if (status === "Preparing") color = "#ff9800";
+    if (status === "Pending") color = "#ef5350";
 
     return (
       <span style={{
@@ -125,8 +149,9 @@ const StaffDashboard = () => {
                     activeOrdersList.map((order, index) => (
                       <div key={index} className="modal-list-item">
                         <div style={{flex: 1}}>
-                          <strong>{order.id}</strong> <span className="text-muted">• {order.time}</span>
-                          <p style={{margin: "5px 0 0", fontSize: "0.9rem", color: "var(--text-muted)"}}>{order.items}</p>
+                          {/* SYNCED: Using receiptId, formatted time, and formatted itemsString */}
+                          <strong>{order.receiptId}</strong> <span className="text-muted">• {order.time}</span>
+                          <p style={{margin: "5px 0 0", fontSize: "0.9rem", color: "var(--text-muted)"}}>{order.itemsString}</p>
                         </div>
                         {renderStatusBadge(order.status)}
                       </div>

@@ -73,8 +73,8 @@ export default function PaymentPageMain() {
     };
 
     try {
-      // Sent to the global "transactions" folder for Staff to see
-      await addDoc(collection(db, "transactions"), newOrder);
+      // Sent to the global "orders" folder for Staff to see
+      await addDoc(collection(db, "orders"), newOrder);
       
       // Update states to show success screen
       setReceiptId(id);

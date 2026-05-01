@@ -815,6 +815,53 @@
     background: #ef5350; 
     color: #fff; 
 }
+/* --- COMPACT LIST VIEW STYLES --- */
+.pos-list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    padding-right: 5px;
+    padding-bottom: 20px;
+}
+
+.pos-list-item-card {
+    background-color: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pos-list-item-card:hover {
+    transform: translateX(4px); /* Sleek slide right instead of jump up */
+    border-color: var(--text-accent);
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.item-info-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+}
+
+.item-info-row h4 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 1.1rem;
+}
+
+.item-info-row p {
+    margin: 0;
+    color: var(--text-accent);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
 
 @keyframes posPopInAndOut {
     0% { opacity: 0; transform: translateY(-15px) scale(0.95); }
