@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase'; 
 import { collection, onSnapshot } from 'firebase/firestore';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './reports.css';
 
 // Mock Data for Restocking (Leave this static until you build an expenses database)
@@ -17,6 +18,7 @@ const Reports = () => {
     // --- REAL-TIME DATA STATES ---
     const [totalRevenue, setTotalRevenue] = useState(0);
     const [totalSales, setTotalSales] = useState(0);
+    const [chartData, setChartData] = useState([]);
     
     // Table States
     const [restockingData, setRestockingData] = useState(INITIAL_RESTOCKING_DATA);
@@ -28,8 +30,14 @@ const Reports = () => {
 
     // Helper function to convert currency strings into real math numbers
     const parseCurrency = (str) => {
-        if (!str && str !== 0) return 0;
-        return parseFloat(String(str).replace(/[^\d.-]/g, ''));
+        if (str === null || str === undefined || str === '') return 0;
+        return parseFloat(String(str).replace(/[^\d.-]/g, '')) || 0;
+    };
+
+    const getAmount = (value) => {
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') return parseCurrency(value);
+        return 0;
     };
 
     // Calculate table totals
@@ -41,18 +49,72 @@ const Reports = () => {
     const profit = totalRevenue - totalExpenses;
 
     useEffect(() => {
-        // 1. Listen to Firebase Transactions for Revenue & Sales
-        const txnsCollectionRef = collection(db, 'transactions');
+        // Helper to get last 7 days
+        const getLast7Days = () => {
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                days.push(date.toISOString().split('T')[0]); // YYYY-MM-DD
+            }
+            return days;
+        };
+
+        const last7Days = getLast7Days();
+
+        const normalizeTimestampToDateString = (createdAt) => {
+            if (!createdAt) return null;
+            let dateObj = null;
+
+            if (createdAt.toDate) {
+                dateObj = createdAt.toDate();
+            } else if (typeof createdAt === 'number') {
+                dateObj = new Date(createdAt);
+            } else if (typeof createdAt === 'string') {
+                dateObj = new Date(createdAt);
+            } else if (createdAt instanceof Date) {
+                dateObj = createdAt;
+            }
+
+            if (!dateObj || Number.isNaN(dateObj.getTime())) return null;
+            return dateObj.toISOString().split('T')[0];
+        };
+
+        // 1. Listen to Firebase Orders for Revenue & Sales
+        const txnsCollectionRef = collection(db, 'orders');
         const unsubscribeTxns = onSnapshot(txnsCollectionRef, (snapshot) => {
             const txns = snapshot.docs.map(doc => doc.data());
             
-            // Only count "Completed" orders for sales and revenue
-            const completedOrders = txns.filter(t => t.status === 'Completed');
+            // Only count "Completed" orders for revenue and sales
+            const completedOrders = txns.filter(t => String(t.status).toLowerCase() === 'completed');
             
-            setTotalSales(completedOrders.length);
-            
-            const revenueSum = completedOrders.reduce((sum, t) => sum + parseCurrency(t.total), 0);
+            const revenueSum = completedOrders.reduce((sum, t) => sum + getAmount(t.totalAmount), 0);
             setTotalRevenue(revenueSum);
+            setTotalSales(completedOrders.length);
+
+            // Group by date for chart
+            const dailyData = {};
+            last7Days.forEach(day => {
+                dailyData[day] = { orderCount: 0, revenue: 0 };
+            });
+
+            completedOrders.forEach(order => {
+                const date = normalizeTimestampToDateString(order.createdAt);
+                if (date && dailyData[date]) {
+                    dailyData[date].orderCount += 1;
+                    dailyData[date].revenue += getAmount(order.totalAmount);
+                }
+            });
+
+            // Calculate daily profit: revenue - (totalExpenses / 7)
+            const dailyExpense = totalExpenses / 7;
+            const chartDataArray = last7Days.map(day => ({
+                day: new Date(day).toLocaleDateString('en-US', { weekday: 'short' }),
+                sales: dailyData[day].revenue,
+                orders: dailyData[day].orderCount,
+                profit: dailyData[day].revenue - dailyExpense
+            }));
+            setChartData(chartDataArray);
         });
 
         // 2. Listen to Firebase Staff for Payroll (NEW)
@@ -84,7 +146,7 @@ const Reports = () => {
             unsubscribeTxns();
             unsubscribeStaff();
         };
-    }, []);
+    }, [totalExpenses]); // Depend on totalExpenses to recalculate profit
 
     return (
         <div className="dashboard-container">
@@ -148,39 +210,30 @@ const Reports = () => {
                     </div>
                     
                     <div className="chart-area-placeholder">
-                        <div className="mock-chart-lines">
-                            <svg viewBox="0 0 800 200" className="mock-svg" preserveAspectRatio="none">
-                                <path d="M 50 150 Q 200 100, 350 120 T 600 50 T 750 130" fill="none" stroke="var(--text-accent)" strokeWidth="3" />
-                                <path d="M 50 180 Q 200 140, 350 150 T 600 100 T 750 150" fill="none" stroke="#888" strokeWidth="3" />
-                                
-                                <circle cx="50" cy="150" r="5" fill="var(--bg-dark)" stroke="var(--text-accent)" strokeWidth="2" />
-                                <circle cx="350" cy="120" r="5" fill="var(--bg-dark)" stroke="var(--text-accent)" strokeWidth="2" />
-                                <circle cx="600" cy="50" r="5" fill="var(--bg-dark)" stroke="var(--text-accent)" strokeWidth="2" />
-                                <circle cx="750" cy="130" r="5" fill="var(--bg-dark)" stroke="var(--text-accent)" strokeWidth="2" />
-                                
-                                <circle cx="50" cy="180" r="5" fill="var(--bg-dark)" stroke="#888" strokeWidth="2" />
-                                <circle cx="350" cy="150" r="5" fill="var(--bg-dark)" stroke="#888" strokeWidth="2" />
-                                <circle cx="600" cy="100" r="5" fill="var(--bg-dark)" stroke="#888" strokeWidth="2" />
-                                <circle cx="750" cy="150" r="5" fill="var(--bg-dark)" stroke="#888" strokeWidth="2" />
-                            </svg>
-                        </div>
-                        <div className="chart-axes">
-                            <div className="y-axis">
-                                <span>₱40k</span>
-                                <span>₱30k</span>
-                                <span>₱20k</span>
-                                <span>₱10k</span>
-                                <span>0</span>
-                            </div>
-                            <div className="x-axis">
-                                <span>Mon</span>
-                                <span>Tue</span>
-                                <span>Wed</span>
-                                <span>Thu</span>
-                                <span>Fri</span>
-                                <span>Sun</span>
-                            </div>
-                        </div>
+                        <ResponsiveContainer width="100%" height={350}>
+                            <LineChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                                <XAxis dataKey="day" stroke="var(--text-muted)" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+                                <YAxis
+                                    stroke="var(--text-muted)"
+                                    tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+                                    tickLine={{ stroke: 'rgba(255,255,255,0.25)' }}
+                                    axisLine={{ stroke: 'rgba(255,255,255,0.25)' }}
+                                    tickFormatter={(value) => `₱${value.toLocaleString()}`}
+                                    interval={0}
+                                    domain={[0, 'dataMax + 100']}
+                                    label={{ value: 'Amount (₱)', angle: -90, position: 'insideLeft', dy: 20, fill: 'var(--text-muted)' }}
+                                />
+                                <Tooltip 
+                                    contentStyle={{ backgroundColor: 'var(--widget-dark)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                                    labelStyle={{ color: 'var(--text-main)' }}
+                                    itemStyle={{ color: 'var(--text-accent)' }}
+                                />
+                                <Legend />
+                                <Line yAxisId="left" type="monotone" dataKey="sales" stroke="var(--text-accent)" strokeWidth={3} name="Sales (₱)" />
+                                <Line yAxisId="left" type="monotone" dataKey="profit" stroke="#888" strokeWidth={3} name="Profit (₱)" />
+                            </LineChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
 
