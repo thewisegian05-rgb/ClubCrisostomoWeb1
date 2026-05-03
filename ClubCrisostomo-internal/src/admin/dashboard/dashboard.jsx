@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './dashboard.css'; 
 import { db } from '../../firebase'; // Firebase connection
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -21,6 +22,8 @@ const AdminDashboard = () => {
     const [staffData, setStaffData] = useState([]);
     const [activeStaffCount, setActiveStaffCount] = useState(0);
     const [breakStaffCount, setBreakStaffCount] = useState(0);
+    
+    const [sevenDayData, setSevenDayData] = useState([]);
 
     // --- MODAL STATES ---
     const [showRevenueModal, setShowRevenueModal] = useState(false);
@@ -48,65 +51,118 @@ const AdminDashboard = () => {
     };
 
     useEffect(() => {
-        // 1. Listen to Transactions
-        const txnsCollectionRef = collection(db, 'transactions');
-        const unsubscribeTxns = onSnapshot(txnsCollectionRef, (snapshot) => {
-            const txns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Get today's date range
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        // 1. Listen to Orders
+        const ordersCollectionRef = collection(db, 'orders');
+        const unsubscribeOrders = onSnapshot(ordersCollectionRef, (snapshot) => {
+            const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
             // Filter by Status
-            const pending = txns.filter(t => t.status === 'Pending');
-            const preparing = txns.filter(t => t.status === 'Preparing');
-            const completed = txns.filter(t => t.status === 'Completed');
-            const voided = txns.filter(t => t.status === 'Voided');
-            const payouts = txns.filter(t => t.status === 'Payout');
+            const pending = orders.filter(t => t.status === 'Pending');
+            const preparing = orders.filter(t => t.status === 'Preparing');
+            const completed = orders.filter(t => t.status === 'Completed');
+            const voided = orders.filter(t => t.status === 'Voided');
+            const payouts = orders.filter(t => t.status === 'Payout');
 
-            setQueueCount(pending.length);
-            setProcessingCount(preparing.length);
-            setCompletedCount(completed.length);
-            setVoidedCount(voided.length);
-            setTotalOrders(txns.filter(t => t.status !== 'Payout').length); // Total actual orders
+            // ALL-TIME order counts (for queues, etc.)
+            const allQueueCount = pending.length;
+            const allProcessingCount = preparing.length;
+            const allCompletedCount = completed.length;
+            const allVoidedCount = voided.length;
+            const allTotalOrders = orders.filter(t => t.status !== 'Payout').length;
 
-            // Calculate Total Revenue (Completed orders only)
-            const completedRev = completed.reduce((sum, t) => sum + parseCurrency(t.total), 0);
-            setRevenue(completedRev);
+            // --- FILTER ORDERS FOR TODAY ONLY ---
+            const todayOrders = orders.filter(t => { 
+                if (!t.createdAt) return false;
+                let orderDate = t.createdAt;
+                if (orderDate.toDate) orderDate = orderDate.toDate();
+                else if (typeof orderDate === 'string') orderDate = new Date(orderDate);
+                
+                return orderDate >= today && orderDate < tomorrow;
+            });
 
-            // --- CALCULATE TALLY DETAILS FOR MODAL ---
-            const voidedRev = voided.reduce((sum, t) => sum + parseCurrency(t.total), 0);
-            const totalOut = payouts.reduce((sum, t) => sum + Math.abs(parseCurrency(t.total)), 0);
+            const todayCompleted = todayOrders.filter(t => t.status === 'Completed');
+            const todayPending = todayOrders.filter(t => t.status === 'Pending');
+            const todayPreparing = todayOrders.filter(t => t.status === 'Preparing');
+            const todayVoided = todayOrders.filter(t => t.status === 'Voided');
+
+            // Set TODAY'S metric card values
+            setQueueCount(todayPending.length);
+            setProcessingCount(todayPreparing.length);
+            setCompletedCount(todayCompleted.length);
+            setVoidedCount(todayVoided.length);
+            setTotalOrders(todayOrders.filter(t => t.status !== 'Payout').length);
+
+            // Calculate Today's Revenue (Completed orders only for today)
+            const todayRev = todayCompleted.reduce((sum, t) => sum + parseCurrency(t.totalAmount), 0);
+            setRevenue(todayRev);
+
+            // --- CALCULATE 7-DAY REVENUE DATA ---
+            const last7Days = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                date.setHours(0, 0, 0, 0);
+                
+                const nextDate = new Date(date);
+                nextDate.setDate(nextDate.getDate() + 1);
+                
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                
+                const dayRevenue = completed
+                    .filter(t => {
+                        if (!t.createdAt) return false;
+                        let txnDate = t.createdAt;
+                        if (txnDate.toDate) txnDate = txnDate.toDate();
+                        else if (typeof txnDate === 'string') txnDate = new Date(txnDate);
+                        
+                        return txnDate >= date && txnDate < nextDate;
+                    })
+                    .reduce((sum, t) => sum + parseCurrency(t.totalAmount), 0);
+                
+                last7Days.push({
+                    day: dayName,
+                    revenue: dayRevenue,
+                    fullDate: date.toLocaleDateString()
+                });
+            }
+            setSevenDayData(last7Days);
+
+            // --- CALCULATE TALLY DETAILS FOR MODAL (ALL TIME) ---
+            const voidedRev = voided.reduce((sum, t) => sum + parseCurrency(t.totalAmount), 0);
+            const totalOut = payouts.reduce((sum, t) => sum + Math.abs(parseCurrency(t.totalAmount)), 0);
+            
+            const allCompletedRev = completed.reduce((sum, t) => sum + parseCurrency(t.totalAmount), 0);
             
             setTallyDetails({
                 completedCount: completed.length,
                 payoutCount: payouts.length,
-                completedRevenue: completedRev,
+                completedRevenue: allCompletedRev,
                 voidedRevenue: voidedRev,
                 totalPayouts: totalOut,
-                expectedCash: completedRev - totalOut,
-                dineInRevenue: completed.filter(t => t.orderType !== 'Takeout').reduce((sum, t) => sum + parseCurrency(t.total), 0),
-                takeoutRevenue: completed.filter(t => t.orderType === 'Takeout').reduce((sum, t) => sum + parseCurrency(t.total), 0)
+                expectedCash: allCompletedRev - totalOut,
+                dineInRevenue: completed.filter(t => t.orderType !== 'Takeout').reduce((sum, t) => sum + parseCurrency(t.totalAmount), 0),
+                takeoutRevenue: completed.filter(t => t.orderType === 'Takeout').reduce((sum, t) => sum + parseCurrency(t.totalAmount), 0)
             });
 
-            // --- CALCULATE BEST SELLERS LIST (Ignoring Add-ons) ---
+            // --- CALCULATE TODAY'S BEST SELLERS (TODAY ONLY) ---
             const itemCounts = {};
-            completed.forEach(t => {
-                if (!t.items) return;
-                const parts = t.items.split(' | ');
-                parts.forEach(p => {
-                    const match = p.match(/(\d+)x\s+(.*)/);
-                    let qty = 1;
-                    let rawName = p.trim();
-
-                    if (match) {
-                        qty = parseInt(match[1]);
-                        rawName = match[2].trim();
-                    }
+            todayCompleted.forEach(t => {
+                if (!t.items || !Array.isArray(t.items)) return;
+                
+                t.items.forEach(item => {
+                    if (!item.name) return;
                     
-                    // Clean the name: Remove add-ons (anything after '+') and prices (if formatted with '-')
-                    let cleanName = rawName.split('+')[0]; // Drops the add-ons
-                    cleanName = cleanName.split(/-?\s*₱/)[0]; // Drops the price if it's attached
-                    cleanName = cleanName.trim();
-
-                    if (cleanName) {
-                        itemCounts[cleanName] = (itemCounts[cleanName] || 0) + qty;
+                    const itemName = item.name.trim();
+                    const quantity = item.quantity || 1;
+                    
+                    if (itemName) {
+                        itemCounts[itemName] = (itemCounts[itemName] || 0) + quantity;
                     }
                 });
             });
@@ -141,7 +197,7 @@ const AdminDashboard = () => {
 
         // Cleanup listeners
         return () => {
-            unsubscribeTxns();
+            unsubscribeOrders();
             unsubscribeStaff();
         };
     }, []);
@@ -249,22 +305,36 @@ const AdminDashboard = () => {
                                 <h2>Sales Overview</h2>
                                 <span>Last 7 Days Revenue</span>
                             </div>
-                            <div className="chart-placeholder">
-                                <div className="chart-axes">
-                                    <div className="y-axis">
-                                        <span>₱8,000</span>
-                                        <span>₱6,000</span>
-                                        <span>₱4,000</span>
-                                        <span>₱2,000</span>
-                                    </div>
-                                    <div className="x-axis">
-                                        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sun</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="chart-legend">
-                                <span className="dot revenue-dot"></span> Revenue
-                            </div>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={sevenDayData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                                    <XAxis 
+                                        dataKey="day" 
+                                        tick={{ fill: '#888', fontSize: 12 }}
+                                        axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                                    />
+                                    <YAxis 
+                                        tick={{ fill: '#888', fontSize: 12 }}
+                                        axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                                        label={{ value: 'Revenue (₱)', angle: -90, position: 'insideLeft', offset: -5, fill: '#888' }}
+                                    />
+                                    <Tooltip 
+                                        formatter={(value) => `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                        contentStyle={{
+                                            backgroundColor: '#1a1a1a',
+                                            border: '1px solid #c8a27c',
+                                            borderRadius: '8px',
+                                            color: '#c8a27c'
+                                        }}
+                                    />
+                                    <Bar 
+                                        dataKey="revenue" 
+                                        fill="#c8a27c" 
+                                        radius={[8, 8, 0, 0]}
+                                        name="Revenue"
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
 
                         {/* BOTTOM LEFT WIDGETS: STAFF & ORDER STATUS */}
