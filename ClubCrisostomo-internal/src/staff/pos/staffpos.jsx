@@ -62,7 +62,7 @@ const StaffPOS = () => {
     // --- CALCULATIONS ---
     const calculateItemLineTotal = (item) => {
         const basePrice = parseFloat(item.price) || 0;
-        const addOnsPrice = item.addOns ? item.addOns.reduce((sum, a) => sum + (a.price * a.qty), 0) : 0;
+        const addOnsPrice = item.addons ? item.addons.reduce((sum, a) => sum + (a.price * a.qty), 0) : 0;
         return (basePrice + addOnsPrice) * item.quantity;
     };
 
