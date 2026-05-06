@@ -24,6 +24,9 @@ const AdminDashboard = () => {
     const [breakStaffCount, setBreakStaffCount] = useState(0);
     
     const [sevenDayData, setSevenDayData] = useState([]);
+    
+    // --- FEEDBACK STATE ---
+    const [feedbacks, setFeedbacks] = useState([]);
 
     // --- MODAL STATES ---
     const [showRevenueModal, setShowRevenueModal] = useState(false);
@@ -201,6 +204,51 @@ const AdminDashboard = () => {
             unsubscribeStaff();
         };
     }, []);
+
+    // --- FETCH FEEDBACKS ---
+    useEffect(() => {
+        const feedbacksCollectionRef = collection(db, 'feedbacks');
+        const unsubscribeFeedbacks = onSnapshot(feedbacksCollectionRef, (snapshot) => {
+            const feedbacksList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                .sort((a, b) => {
+                    // Sort by timestamp (newest first)
+                    const timeA = a.timestamp || 0;
+                    const timeB = b.timestamp || 0;
+                    return timeB - timeA;
+                })
+                .slice(0, 5); // Show only the 5 most recent feedbacks
+            
+            setFeedbacks(feedbacksList);
+        });
+
+        return () => unsubscribeFeedbacks();
+    }, []);
+
+    // --- UTILITY FUNCTION: Format Relative Time ---
+    const getRelativeTime = (timestamp) => {
+        if (!timestamp) return 'Just now';
+        
+        const now = Date.now();
+        const diff = now - timestamp; // milliseconds
+        
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        
+        if (seconds < 60) return 'Just now';
+        if (minutes < 60) return `${minutes}min${minutes > 1 ? 's' : ''} ago`;
+        if (hours < 24) return `${hours}h${hours > 1 ? '' : ''} ago`;
+        if (days < 7) return `${days}d ago`;
+        
+        return 'A week ago';
+    };
+
+    // --- UTILITY FUNCTION: Render Stars ---
+    const renderStars = (rating) => {
+        const filledStars = Math.round(rating);
+        return '⭐'.repeat(filledStars);
+    };
 
     return (
         <div className="dashboard-container">
@@ -387,17 +435,24 @@ const AdminDashboard = () => {
                             <div className="status-item"><span className="dot green-dot"></span> Complete <strong>{completedCount}</strong></div>
                         </div>
 
-                        {/* CUSTOMER FEEDBACK (Static Placeholder) */}
+                        {/* CUSTOMER FEEDBACK (Live Data) */}
                         <div className="widget feedback-widget">
                             <h2>Customer Feedback</h2>
-                            <div className="feedback-card">
-                                <div className="stars">⭐⭐⭐⭐⭐ <span className="time">5mins ago</span></div>
-                                <p>Fast service and great coffee.</p>
-                            </div>
-                            <div className="feedback-card">
-                                <div className="stars">⭐⭐⭐⭐ <span className="time">2h ago</span></div>
-                                <p>Nice ambiance but waiting time is long.</p>
-                            </div>
+                            {feedbacks.length === 0 ? (
+                                <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', padding: '20px', textAlign: 'center' }}>
+                                    No feedbacks yet. Customer reviews will appear here.
+                                </div>
+                            ) : (
+                                feedbacks.map((feedback) => (
+                                    <div className="feedback-card" key={feedback.id}>
+                                        <div className="stars">
+                                            {renderStars(feedback.rating)} 
+                                            <span className="time">{getRelativeTime(feedback.timestamp)}</span>
+                                        </div>
+                                        <p>{feedback.comment || 'No comment provided'}</p>
+                                    </div>
+                                ))
+                            )}
                         </div>
 
                         {/* SMART INSIGHTS (Static Placeholder) */}
