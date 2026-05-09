@@ -7,6 +7,7 @@ import PaymentpageMain from "./Pages/Paymentpage/PaymentpageMain.jsx";
 import Login from "./Pages/Login/Login.jsx";
 import Signup from "./Pages/Signup/Signup.jsx"; // <-- 1. ADDED SIGNUP IMPORT
 import Profile from "./Pages/Profile/Profile.jsx"; 
+import './Components/Mobile/responsive.css';
 
 // Import your Firebase db and Firestore functions
 import { db } from "./firebase"; 

@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import './Mobile/responsive.css';
 
 // Your Bouncer
 import ProtectedRoute from "./staff/components/ProtectedRoute.jsx"; 
