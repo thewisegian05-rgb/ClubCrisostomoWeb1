@@ -1,0 +1,44 @@
+/* ==========================================================================
+   MASTER THEME VARIABLES (Controls Light/Dark Mode Globally)
+   ========================================================================== */
+
+/* --- DARK MODE (Default) --- */
+:root {
+    --bg-dark: #1A1C20;        
+    --widget-dark: #24272C;    
+    --sidebar-bg: #24272C;     
+    --text-main: #F3F4F6;      
+    --text-muted: #9CA3AF;     
+    --text-accent: #C8A27C;    /* Club C Gold */
+    --border-color: rgba(255, 255, 255, 0.05);
+    --hover-bg: rgba(255, 255, 255, 0.05);
+    --input-bg: rgba(0, 0, 0, 0.2);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --modal-overlay: rgba(0, 0, 0, 0.7);
+    --btn-text-gold: #1A1C20;  
+}
+
+/* --- LIGHT MODE --- */
+[data-theme='light'] {
+    --bg-dark: #F4F5F7;        
+    --widget-dark: #FFFFFF;    
+    --sidebar-bg: #FFFFFF;
+    --text-main: #1F2937;      
+    --text-muted: #6B7280;     
+    --text-accent: #B07D47;    /* Darker gold for readability on white */
+    --border-color: rgba(0, 0, 0, 0.08);
+    --hover-bg: rgba(0, 0, 0, 0.04);
+    --input-bg: #FFFFFF;
+    --input-border: rgba(0, 0, 0, 0.15);
+    --modal-overlay: rgba(0, 0, 0, 0.4);
+    --btn-text-gold: #FFFFFF;  
+}
+
+/* Base styles for the whole app */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease; 
+}

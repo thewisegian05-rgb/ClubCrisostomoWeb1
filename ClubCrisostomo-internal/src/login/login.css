@@ -1,0 +1,118 @@
+/* --- LOGIN GLOBAL --- */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #181818; /* Your brand dark background */
+  font-family: 'Segoe UI', sans-serif;
+  padding: 20px;
+}
+
+/* --- LOGIN CARD --- */
+.login-card {
+  background-color: #2C3639; /* Same color as your Customer Nav Bar */
+  padding: 50px 40px;
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+/* --- BRANDING --- */
+.login-header {
+  margin-bottom: 40px;
+}
+
+.login-header .Logo {
+  margin: 0;
+  font-size: 3rem;
+  color: #DCD7C9;
+}
+
+.login-header .Logo span {
+  color: #C8A27C; /* The coffee/gold accent */
+}
+
+.login-subtitle {
+  color: #888;
+  letter-spacing: 3px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+/* --- FORM STYLING --- */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.input-group label {
+  color: #C8A27C;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.input-group input {
+  padding: 14px 15px;
+  background-color: #181818;
+  border: 1px solid #3d4a4e;
+  border-radius: 6px;
+  color: #DCD7C9;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-group input:focus {
+  border-color: #C8A27C;
+  box-shadow: 0 0 8px rgba(200, 162, 124, 0.2);
+}
+
+.input-group input::placeholder {
+  color: #555;
+}
+
+/* --- SUBMIT BUTTON --- */
+.login-button {
+  margin-top: 15px;
+  padding: 14px;
+  background-color: #C8A27C;
+  color: #181818;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.login-button:hover {
+  background-color: #DCD7C9;
+}
+
+.login-button:active {
+  transform: scale(0.98);
+}
+
+/* --- REUSED ANIMATION --- */
+.fade-in { 
+    opacity: 0; 
+    transform: translateY(30px); 
+    transition: 1s ease-out; 
+}
+.fade-in.show { 
+    opacity: 1; 
+    transform: translate(0); 
+}
