@@ -1,0 +1,18 @@
+/* 1. UNIVERSAL BOX-SIZING RESET */
+/* This stops padding from expanding the width of your elements */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* 2. STRICT OVERFLOW RULES */
+html, body {
+    margin: 0; 
+    padding: 0;
+    width: 100%;
+    max-width: 100vw; /* Strictly limits width to the viewport */
+    overflow-x: hidden; /* Must be on BOTH html and body */
+    background-color: #181818; 
+    font-family: 'Segoe UI', sans-serif; 
+    color: white; 
+    scroll-behavior: smooth; 
+}

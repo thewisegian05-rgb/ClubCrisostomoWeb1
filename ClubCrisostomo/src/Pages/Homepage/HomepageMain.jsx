@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Added useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import "../../Components/HomepageComponents/Homepage.css";
 
 const MENU_DATA = [
@@ -81,9 +81,13 @@ const HomepageMain = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
-  // New States for Login / Dropdown
+  // Login & Dropdown States
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  
+  // Mobile Hamburger Menu State
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   const navigate = useNavigate();
 
   // Check login status on load
@@ -170,33 +174,68 @@ const HomepageMain = () => {
           </Link>
         </div>
         
-        <div className="nav-buttons-centered">
+        {/* DESKTOP LINKS (Hidden on Mobile) */}
+        <div className="nav-buttons-centered desktop-only">
           <Link to="/menu" className="nav-link-animated">Full Menu</Link>
           <a href="#recommendation-section" className="nav-link-animated">Recommendation</a>
           <a href="#footer-info" className="nav-link-animated">Contact</a>
         </div>
 
         <div className="nav-right">
-          {/* Conditional Rendering for Login vs Profile Burger Menu */}
-          {isLoggedIn ? (
-            <div className="profile-menu-container">
-              <button 
-                className="burger-btn" 
-                onClick={() => setShowDropdown(!showDropdown)}
-              >
-                ☰
-              </button>
+          {/* DESKTOP Login vs Profile Burger Menu (Hidden on Mobile) */}
+          <div className="desktop-auth">
+            {isLoggedIn ? (
+              <div className="profile-menu-container">
+                <button 
+                  className="burger-btn" 
+                  onClick={() => setShowDropdown(!showDropdown)}
+                >
+                  ☰
+                </button>
 
-              {showDropdown && (
-                <div className="dropdown-menu fade-in-dropdown">
-                  <Link to="/profile" className="dropdown-item">My Profile</Link>
-                  <div className="dropdown-divider"></div>
-                  <button onClick={handleLogout} className="dropdown-item logout-item">Logout</button>
-                </div>
-              )}
-            </div>
+                {showDropdown && (
+                  <div className="dropdown-menu fade-in-dropdown">
+                    <Link to="/profile" className="dropdown-item">My Profile</Link>
+                    <div className="dropdown-divider"></div>
+                    <button onClick={handleLogout} className="dropdown-item logout-item">Logout</button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link to="/login" className="login-btn">Login</Link>
+            )}
+          </div>
+
+          {/* MAIN MOBILE BURGER ICON */}
+          <button 
+            className="main-mobile-burger"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <span className={`bar ${isMobileMenuOpen ? "open" : ""}`}></span>
+            <span className={`bar ${isMobileMenuOpen ? "open" : ""}`}></span>
+            <span className={`bar ${isMobileMenuOpen ? "open" : ""}`}></span>
+          </button>
+        </div>
+
+        {/* MOBILE SLIDE-DOWN MENU */}
+        <div className={`mobile-nav-dropdown ${isMobileMenuOpen ? "open" : ""}`}>
+          <Link to="/menu" onClick={() => setIsMobileMenuOpen(false)}>Full Menu</Link>
+          <a href="#recommendation-section" onClick={() => setIsMobileMenuOpen(false)}>Recommendation</a>
+          <a href="#footer-info" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
+          
+          {/* MOBILE Authentication Links */}
+          {!isLoggedIn ? (
+            <Link to="/login" className="mobile-login-btn" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
           ) : (
-            <Link to="/login" className="login-btn">Login</Link>
+            <>
+              <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>My Profile</Link>
+              <button 
+                className="mobile-logout-btn" 
+                onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+              >
+                Logout
+              </button>
+            </>
           )}
         </div>
       </nav>
