@@ -125,39 +125,44 @@ const HomepageMain = () => {
     );
   };
 
-  const getRecommendations = async () => {
-    if (selectedPreferences.length === 0) {
-      setError("Please select at least one preference");
-      setRecommendations([]);
-      return;
-    }
-
-    setLoading(true);
-    setError("");
+const getRecommendations = async () => {
+  if (selectedPreferences.length === 0) {
+    setError("Please select at least one preference");
     setRecommendations([]);
+    return;
+  }
 
-    try {
-      const response = await fetch("http://127.0.0.1:5000/recommend", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ preferences: selectedPreferences }),
-      });
+  setLoading(true);
+  setError("");
+  setRecommendations([]);
 
-      if (!response.ok) {
-        throw new Error("Failed to get recommendations");
-      }
+  // 1. Define the dynamic base URL (falls back to local IP if environment variable isn't set)
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
 
-      const data = await response.json();
-      setRecommendations(data.recommendations || []);
-    } catch (err) {
-      setError("Unable to connect to recommendation service. Make sure Flask is running on localhost:5000");
-      console.error(err);
-    } finally {
-      setLoading(false);
+  try {
+    // 2. Use template literals to inject the dynamic URL
+    const response = await fetch(`${API_BASE_URL}/recommend`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ preferences: selectedPreferences }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to get recommendations");
     }
-  };
+
+    const data = await response.json();
+    setRecommendations(data.recommendations || []);
+  } catch (err) {
+    // 3. Updated the error message to be more generic since it runs on the web now
+    setError("Unable to connect to the recommendation service. Please try again later.");
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const clearPreferences = () => {
     setSelectedPreferences([]);
