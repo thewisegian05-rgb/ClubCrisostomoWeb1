@@ -40,6 +40,7 @@
   border-radius: 30px;
   font-size: 1.1rem;
   font-weight: 700;
+  white-space: nowrap; /* Prevents awkward wrapping */
 }
 
 .menu-btn, .checkout-btn {
@@ -52,6 +53,10 @@
   font-weight: bold;
   text-decoration: none;
   transition: all 0.3s ease;
+  white-space: nowrap; /* Prevents "Check" and "Out" from stacking on top of each other */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .checkout-btn.disabled {
@@ -209,4 +214,82 @@
   border-radius: 25px;
   margin-top: 20px;
   display: inline-block;
+}
+
+/* =========================================
+   📱 MOBILE RESPONSIVENESS FIXES
+========================================= */
+@media (max-width: 768px) {
+  /* Navbar compacting */
+  .navBar {
+    padding: 12px 5%;
+    gap: 10px;
+    flex-wrap: wrap; 
+  }
+  .logo { font-size: 1.5rem; }
+  
+  .nav-right {
+    gap: 6px; /* Tightened gap slightly to fit the buttons better */
+  }
+  
+  .menu-btn, .checkout-btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .total-amount {
+    padding: 8px 12px;
+    font-size: 0.95rem;
+  }
+
+  /* Cart Layout */
+  .cart-page {
+    padding: 20px 5%;
+  }
+
+  /* Shrink the card and image */
+  .cart-card {
+    padding: 12px;
+    gap: 12px;
+    border-radius: 12px;
+  }
+  
+  /* FIXED: Huge image shrunk for mobile */
+  .item-img {
+    width: 75px;  
+    height: 75px;
+    border-radius: 8px;
+  }
+
+  /* Text resizing */
+  .item-title-group h4 {
+    font-size: 1rem;
+  }
+  .item-price-tag {
+    font-size: 1rem;
+  }
+
+  /* Controls compacting */
+  .item-actions {
+    margin-top: 10px; 
+  }
+  .qty-picker {
+    padding: 4px 10px;
+    gap: 10px;
+  }
+  .qty-picker button {
+    font-size: 1.1rem;
+  }
+  .remove-text {
+    font-size: 0.8rem;
+  }
+}
+
+/* For extremely small screens (like older iPhones) */
+@media (max-width: 480px) {
+  .nav-right {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 5px;
+  }
 }

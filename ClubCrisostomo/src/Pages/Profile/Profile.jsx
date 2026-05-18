@@ -86,17 +86,15 @@ const Profile = () => {
     }
   };
 
-  // --- NEW: Handle Receiving Order ---
   const handleReceiveOrder = async (orderId) => {
     try {
       const orderRef = doc(db, "orders", orderId);
-      await updateDoc(orderRef, { status: "Completed" }); // Moves it to the 'To Rate' tab
+      await updateDoc(orderRef, { status: "Completed" }); 
       
       setUserOrders(prevOrders => 
         prevOrders.map(order => order.id === orderId ? { ...order, status: "Completed" } : order)
       );
       
-      // Auto-switch tab to let them rate it immediately
       setActiveTab("To Rate");
     } catch (error) {
       console.error("Error completing order:", error);
@@ -104,10 +102,8 @@ const Profile = () => {
     }
   };
 
-  // --- NEW: Handle Report Issue ---
   const handleReportIssue = (receiptId) => {
     alert(`We are sorry to hear that! Customer Support has been notified regarding order ${receiptId}. A staff member will assist you shortly.`);
-    // You can expand this later to update a database flag if needed.
   };
 
   const openRateModal = (order) => {
@@ -151,13 +147,12 @@ const Profile = () => {
     }
   };
 
-  // --- UPDATED LOGIC FILTER ---
   const filteredOrders = userOrders.filter(order => {
     const status = order.status || "";
-    if (activeTab === "Waiting for Approval") return status === "Pending"; // Staff hasn't accepted yet
-    if (activeTab === "To Ship") return status === "Preparing"; // Staff accepted, kitchen is cooking
-    if (activeTab === "To Receive") return status === "To Receive"; // Staff clicked 'Done', waiting for customer
-    if (activeTab === "To Rate") return status === "Completed"; // Customer clicked 'Received', ready to rate
+    if (activeTab === "Waiting for Approval") return status === "Pending"; 
+    if (activeTab === "To Ship") return status === "Preparing"; 
+    if (activeTab === "To Receive") return status === "To Receive"; 
+    if (activeTab === "To Rate") return status === "Completed"; 
     return false;
   });
 
@@ -199,7 +194,6 @@ const Profile = () => {
               </div>
             )}
             <p>{userEmail}</p>
-            <span className="member-badge">Gold Member</span>
           </div>
         </div>
 
@@ -247,26 +241,23 @@ const Profile = () => {
                   <div className="order-card-footer">
                     <span className="order-total">Total: ₱{order.totalAmount || order.total || "0"}</span>
                     
-                    {/* BUTTONS FOR 'WAITING FOR APPROVAL' */}
                     {activeTab === "Waiting for Approval" && (
                       <div className="action-button-group">
                         <button className="cancel-btn" onClick={() => handleCancelOrder(order.id)}>Cancel Order</button>
                       </div>
                     )}
 
-                    {/* BUTTONS FOR 'TO RECEIVE' */}
                     {activeTab === "To Receive" && (
                       <div className="action-button-group" style={{ display: 'flex', gap: '10px' }}>
-                        <button className="receive-btn" onClick={() => handleReceiveOrder(order.id)} style={{ backgroundColor: '#4caf50', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                        <button className="receive-btn" onClick={() => handleReceiveOrder(order.id)} style={{ backgroundColor: '#4caf50', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
                           Order Received
                         </button>
-                        <button className="issue-btn" onClick={() => handleReportIssue(order.receiptId)} style={{ backgroundColor: 'transparent', color: '#ef5350', border: '1px solid #ef5350', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
+                        <button className="issue-btn" onClick={() => handleReportIssue(order.receiptId)} style={{ backgroundColor: 'transparent', color: '#ef5350', border: '1px solid #ef5350', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>
                           Report Issue
                         </button>
                       </div>
                     )}
                     
-                    {/* BUTTONS FOR 'TO RATE' */}
                     {activeTab === "To Rate" && (
                       order.isRated ? (
                         <span className="rated-badge">Rated ⭐</span>

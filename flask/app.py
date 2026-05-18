@@ -4,7 +4,15 @@ from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
 
 app = Flask(__name__)
-CORS(app)  # enable CORS for all routes
+
+# Configured CORS to allow all origins and properly respond to preflight OPTIONS requests
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["POST", "GET", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # load and preprocess the data
 df = pd.read_csv("BrewLogicMenu.csv")

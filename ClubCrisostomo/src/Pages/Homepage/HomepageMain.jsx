@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Added useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import "../../Components/HomepageComponents/Homepage.css";
 
 const MENU_DATA = [
@@ -81,9 +81,13 @@ const HomepageMain = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
-  // New States for Login / Dropdown
+  // Login & Dropdown States
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  
+  // Mobile Hamburger Menu State
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   const navigate = useNavigate();
 
   // Check login status on load
@@ -121,39 +125,44 @@ const HomepageMain = () => {
     );
   };
 
-  const getRecommendations = async () => {
-    if (selectedPreferences.length === 0) {
-      setError("Please select at least one preference");
-      setRecommendations([]);
-      return;
-    }
-
-    setLoading(true);
-    setError("");
+const getRecommendations = async () => {
+  if (selectedPreferences.length === 0) {
+    setError("Please select at least one preference");
     setRecommendations([]);
+    return;
+  }
 
-    try {
-      const response = await fetch("http://127.0.0.1:5000/recommend", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ preferences: selectedPreferences }),
-      });
+  setLoading(true);
+  setError("");
+  setRecommendations([]);
 
-      if (!response.ok) {
-        throw new Error("Failed to get recommendations");
-      }
+  // 1. Define the dynamic base URL (falls back to local IP if environment variable isn't set)
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
 
-      const data = await response.json();
-      setRecommendations(data.recommendations || []);
-    } catch (err) {
-      setError("Unable to connect to recommendation service. Make sure Flask is running on localhost:5000");
-      console.error(err);
-    } finally {
-      setLoading(false);
+  try {
+    // 2. Use template literals to inject the dynamic URL
+    const response = await fetch(`${API_BASE_URL}/recommend`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ preferences: selectedPreferences }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to get recommendations");
     }
-  };
+
+    const data = await response.json();
+    setRecommendations(data.recommendations || []);
+  } catch (err) {
+    // 3. Updated the error message to be more generic since it runs on the web now
+    setError("Unable to connect to the recommendation service. Please try again later.");
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const clearPreferences = () => {
     setSelectedPreferences([]);
@@ -170,33 +179,68 @@ const HomepageMain = () => {
           </Link>
         </div>
         
-        <div className="nav-buttons-centered">
+        {/* DESKTOP LINKS (Hidden on Mobile) */}
+        <div className="nav-buttons-centered desktop-only">
           <Link to="/menu" className="nav-link-animated">Full Menu</Link>
           <a href="#recommendation-section" className="nav-link-animated">Recommendation</a>
           <a href="#footer-info" className="nav-link-animated">Contact</a>
         </div>
 
         <div className="nav-right">
-          {/* Conditional Rendering for Login vs Profile Burger Menu */}
-          {isLoggedIn ? (
-            <div className="profile-menu-container">
-              <button 
-                className="burger-btn" 
-                onClick={() => setShowDropdown(!showDropdown)}
-              >
-                ☰
-              </button>
+          {/* DESKTOP Login vs Profile Burger Menu (Hidden on Mobile) */}
+          <div className="desktop-auth">
+            {isLoggedIn ? (
+              <div className="profile-menu-container">
+                <button 
+                  className="burger-btn" 
+                  onClick={() => setShowDropdown(!showDropdown)}
+                >
+                  ☰
+                </button>
 
-              {showDropdown && (
-                <div className="dropdown-menu fade-in-dropdown">
-                  <Link to="/profile" className="dropdown-item">My Profile</Link>
-                  <div className="dropdown-divider"></div>
-                  <button onClick={handleLogout} className="dropdown-item logout-item">Logout</button>
-                </div>
-              )}
-            </div>
+                {showDropdown && (
+                  <div className="dropdown-menu fade-in-dropdown">
+                    <Link to="/profile" className="dropdown-item">My Profile</Link>
+                    <div className="dropdown-divider"></div>
+                    <button onClick={handleLogout} className="dropdown-item logout-item">Logout</button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link to="/login" className="login-btn">Login</Link>
+            )}
+          </div>
+
+          {/* MAIN MOBILE BURGER ICON */}
+          <button 
+            className="main-mobile-burger"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <span className={`bar ${isMobileMenuOpen ? "open" : ""}`}></span>
+            <span className={`bar ${isMobileMenuOpen ? "open" : ""}`}></span>
+            <span className={`bar ${isMobileMenuOpen ? "open" : ""}`}></span>
+          </button>
+        </div>
+
+        {/* MOBILE SLIDE-DOWN MENU */}
+        <div className={`mobile-nav-dropdown ${isMobileMenuOpen ? "open" : ""}`}>
+          <Link to="/menu" onClick={() => setIsMobileMenuOpen(false)}>Full Menu</Link>
+          <a href="#recommendation-section" onClick={() => setIsMobileMenuOpen(false)}>Recommendation</a>
+          <a href="#footer-info" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
+          
+          {/* MOBILE Authentication Links */}
+          {!isLoggedIn ? (
+            <Link to="/login" className="mobile-login-btn" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
           ) : (
-            <Link to="/login" className="login-btn">Login</Link>
+            <>
+              <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>My Profile</Link>
+              <button 
+                className="mobile-logout-btn" 
+                onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+              >
+                Logout
+              </button>
+            </>
           )}
         </div>
       </nav>
